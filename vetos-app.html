@@ -1,0 +1,1572 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#080c0a">
+<title>VetOS · Panel de Control</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+:root{
+  --noir:#080c0a; --deep:#0d1410; --card:#111a14; --card2:#162019;
+  --border:#1e3024; --border2:#264030;
+  --emerald:#2ecc71; --emerald-l:#4eda87; --emerald-d:#1fa355;
+  --emerald-dim:rgba(46,204,113,.1);
+  --rose:#e05c5c; --gold:#c8a96e; --blue:#5c9de0;
+  --text:#e8f2eb; --muted:#6b8c73; --soft:#b0ccb8;
+  --sidebar:260px;
+  --fs-xs:12px; --fs-sm:13px; --fs-base:15px; --fs-md:17px;
+  --fs-lg:20px; --fs-xl:26px; --fs-2xl:34px;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{
+  font-family:'DM Mono',monospace;
+  background:var(--noir);color:var(--text);
+  height:100%;overflow:hidden;
+  -webkit-font-smoothing:antialiased;
+  font-size:var(--fs-base);
+}
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-track{background:var(--deep);}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+
+/* ── LOADER ── */
+#loader{
+  position:fixed;inset:0;background:var(--noir);
+  display:flex;align-items:center;justify-content:center;
+  flex-direction:column;gap:24px;z-index:9999;
+}
+.loader-logo{
+  font-family:'Syne',sans-serif;font-size:48px;font-weight:800;
+  opacity:0;animation:fadeUp .6s .2s forwards;
+}
+.loader-logo em{
+  font-family:'Instrument Serif',serif;font-style:italic;
+  color:var(--emerald);font-weight:400;
+}
+.loader-bar{
+  width:120px;height:2px;background:var(--border);
+  border-radius:2px;overflow:hidden;
+  opacity:0;animation:fadeUp .6s .4s forwards;
+}
+.loader-bar-fill{
+  height:100%;background:var(--emerald);
+  animation:load 1.2s ease forwards;
+}
+@keyframes load{from{width:0}to{width:100%}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── LOGIN ── */
+#loginScreen{
+  position:fixed;inset:0;background:var(--noir);
+  display:none;align-items:center;justify-content:center;
+  z-index:1000;
+}
+.login-bg{
+  position:absolute;inset:0;
+  background-image:linear-gradient(var(--border) 1px,transparent 1px),
+    linear-gradient(90deg,var(--border) 1px,transparent 1px);
+  background-size:48px 48px;opacity:.2;
+}
+.login-glow{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  width:600px;height:600px;
+  background:radial-gradient(circle,rgba(46,204,113,.06) 0%,transparent 70%);
+}
+.login-box{
+  background:var(--card);border:1px solid var(--border2);
+  border-radius:16px;padding:52px 44px;
+  width:100%;max-width:420px;
+  position:relative;z-index:2;
+  animation:fadeUp .5s both;
+}
+.login-logo{
+  font-family:'Syne',sans-serif;font-size:36px;font-weight:800;
+  text-align:center;margin-bottom:8px;
+}
+.login-logo em{
+  font-family:'Instrument Serif',serif;font-style:italic;
+  color:var(--emerald);font-weight:400;
+}
+.login-sub{
+  text-align:center;font-size:13px;color:var(--muted);
+  margin-bottom:36px;
+}
+.form-group{margin-bottom:16px;}
+.form-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;display:block;}
+.form-input{
+  width:100%;background:var(--deep);border:1px solid var(--border2);
+  border-radius:6px;padding:14px 16px;
+  color:var(--text);font-size:15px;font-family:'DM Mono',monospace;
+  outline:none;transition:border-color .2s;
+}
+.form-input:focus{border-color:var(--emerald);}
+.form-input::placeholder{color:var(--muted);}
+.btn-login{
+  width:100%;background:var(--emerald);color:var(--noir);
+  border:none;border-radius:6px;padding:15px;
+  font-family:'Syne',sans-serif;font-size:15px;font-weight:700;
+  cursor:pointer;letter-spacing:.5px;text-transform:uppercase;
+  transition:all .2s;margin-top:8px;
+}
+.btn-login:hover{background:var(--emerald-l);}
+.login-err{
+  background:rgba(224,92,92,.1);border:1px solid rgba(224,92,92,.3);
+  border-radius:6px;padding:10px 14px;
+  font-size:13px;color:#e05c5c;margin-top:12px;
+  display:none;
+}
+
+/* ── APP SHELL ── */
+#appShell{
+  display:none;height:100vh;
+  flex-direction:row;
+  animation:fadeIn .4s;
+}
+
+/* ── SIDEBAR ── */
+.sidebar{
+  width:var(--sidebar);min-width:var(--sidebar);
+  background:var(--deep);border-right:1px solid var(--border);
+  display:flex;flex-direction:column;height:100vh;
+  overflow-y:auto;
+  transition:transform .3s;
+}
+.sidebar-logo{
+  padding:28px 24px 20px;
+  font-family:'Syne',sans-serif;font-size:24px;font-weight:800;
+  border-bottom:1px solid var(--border);
+}
+.sidebar-logo em{
+  font-family:'Instrument Serif',serif;font-style:italic;
+  color:var(--emerald);font-weight:400;
+}
+.sidebar-clinic{
+  padding:16px 24px;
+  border-bottom:1px solid var(--border);
+}
+.clinic-name{font-size:13px;font-weight:600;color:var(--text);}
+.clinic-plan{
+  font-size:10px;color:var(--emerald);
+  background:var(--emerald-dim);
+  border:1px solid rgba(46,204,113,.2);
+  padding:2px 8px;border-radius:2px;
+  display:inline-block;margin-top:4px;
+  text-transform:uppercase;letter-spacing:.5px;
+}
+.nav-section{padding:20px 16px 8px;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;}
+.nav-item{
+  display:flex;align-items:center;gap:12px;
+  padding:11px 16px;border-radius:6px;margin:2px 8px;
+  cursor:pointer;transition:all .2s;
+  font-size:13px;color:var(--soft);
+  text-decoration:none;
+}
+.nav-item:hover{background:var(--card);color:var(--text);}
+.nav-item.active{
+  background:var(--emerald-dim);color:var(--emerald);
+  border:1px solid rgba(46,204,113,.15);
+}
+.nav-icon{font-size:16px;min-width:20px;text-align:center;}
+.sidebar-bottom{margin-top:auto;padding:16px 8px;border-top:1px solid var(--border);}
+.btn-logout{
+  display:flex;align-items:center;gap:10px;
+  padding:11px 16px;border-radius:6px;
+  cursor:pointer;font-size:13px;color:var(--muted);
+  transition:all .2s;width:100%;
+  background:none;border:none;font-family:'DM Mono',monospace;
+}
+.btn-logout:hover{color:var(--rose);background:rgba(224,92,92,.08);}
+
+/* ── MAIN ── */
+.main{
+  flex:1;overflow-y:auto;
+  background:var(--noir);
+}
+.topbar{
+  position:sticky;top:0;
+  background:rgba(8,12,10,.95);backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--border);
+  padding:16px 32px;
+  display:flex;align-items:center;justify-content:space-between;
+  z-index:50;
+}
+.topbar-title{
+  font-family:'Syne',sans-serif;font-size:18px;font-weight:700;
+}
+.topbar-right{display:flex;align-items:center;gap:16px;}
+.topbar-date{font-size:12px;color:var(--muted);}
+.topbar-menu{
+  display:none;background:none;border:none;
+  color:var(--text);cursor:pointer;font-size:20px;padding:4px;
+}
+.content{padding:32px;animation:slideIn .4s both;}
+
+/* ── STATS GRID ── */
+.stats-grid{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:16px;
+  margin-bottom:28px;
+}
+.stat-card{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:10px;padding:22px;
+  position:relative;overflow:hidden;
+  transition:border-color .2s;
+}
+.stat-card:hover{border-color:var(--border2);}
+.stat-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+}
+.stat-card.c-emerald::before{background:var(--emerald);}
+.stat-card.c-gold::before{background:var(--gold);}
+.stat-card.c-blue::before{background:var(--blue);}
+.stat-card.c-rose::before{background:var(--rose);}
+.stat-icon{font-size:22px;margin-bottom:12px;}
+.stat-val{
+  font-family:'Syne',sans-serif;font-size:28px;font-weight:800;
+  letter-spacing:-1px;margin-bottom:4px;
+}
+.stat-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;}
+.stat-delta{font-size:11px;margin-top:6px;}
+.stat-delta.up{color:var(--emerald);}
+.stat-delta.down{color:var(--rose);}
+
+/* ── GRIDS ── */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;}
+.grid-3{display:grid;grid-template-columns:2fr 1fr;gap:20px;margin-bottom:20px;}
+.panel{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:10px;overflow:hidden;
+}
+.panel-header{
+  padding:16px 20px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.panel-title{
+  font-family:'Syne',sans-serif;font-size:14px;font-weight:700;
+}
+.panel-body{padding:20px;}
+
+/* ── TABLE ── */
+.table{width:100%;border-collapse:collapse;}
+.table th{
+  font-size:10px;color:var(--muted);text-transform:uppercase;
+  letter-spacing:1px;padding:10px 16px;
+  border-bottom:1px solid var(--border);text-align:left;
+}
+.table td{
+  padding:13px 16px;border-bottom:1px solid var(--border);
+  font-size:13px;color:var(--soft);
+}
+.table tr:last-child td{border-bottom:none;}
+.table tr:hover td{background:var(--deep);}
+.table-name{color:var(--text);font-weight:500;}
+
+/* ── BADGES ── */
+.badge{
+  font-size:10px;padding:3px 10px;border-radius:2px;
+  font-weight:600;text-transform:uppercase;letter-spacing:.5px;
+  display:inline-block;
+}
+.badge-ok{background:rgba(46,204,113,.12);color:var(--emerald);}
+.badge-warn{background:rgba(200,169,110,.12);color:var(--gold);}
+.badge-err{background:rgba(224,92,92,.12);color:var(--rose);}
+.badge-blue{background:rgba(92,157,224,.12);color:var(--blue);}
+.badge-muted{background:var(--border);color:var(--muted);}
+
+/* ── BUTTONS ── */
+.btn{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:9px 18px;border-radius:6px;
+  font-family:'Syne',sans-serif;font-size:12px;font-weight:700;
+  cursor:pointer;border:none;transition:all .2s;
+  text-transform:uppercase;letter-spacing:.5px;
+}
+.btn-sm{padding:7px 14px;font-size:11px;}
+.btn-primary{background:var(--emerald);color:var(--noir);}
+.btn-primary:hover{background:var(--emerald-l);}
+.btn-ghost{background:none;border:1px solid var(--border2);color:var(--soft);}
+.btn-ghost:hover{border-color:var(--emerald);color:var(--emerald);}
+.btn-danger{background:none;border:1px solid rgba(224,92,92,.3);color:var(--rose);}
+.btn-danger:hover{background:rgba(224,92,92,.1);}
+.btn-icon{padding:8px;border-radius:6px;background:none;border:1px solid var(--border);cursor:pointer;color:var(--muted);transition:all .2s;font-size:14px;}
+.btn-icon:hover{border-color:var(--emerald);color:var(--emerald);}
+
+/* ── AGENDA ── */
+.agenda-grid{
+  display:grid;gap:0;
+}
+.agenda-row{
+  display:flex;align-items:center;gap:12px;
+  padding:14px 20px;border-bottom:1px solid var(--border);
+  transition:background .15s;cursor:pointer;
+}
+.agenda-row:hover{background:var(--deep);}
+.agenda-row:last-child{border-bottom:none;}
+.agenda-hour{
+  font-size:13px;color:var(--emerald);
+  min-width:44px;font-weight:500;
+}
+.agenda-pet-wrap{flex:1;}
+.agenda-pet-name{font-size:14px;font-weight:600;color:var(--text);}
+.agenda-pet-detail{font-size:11px;color:var(--muted);margin-top:2px;}
+.agenda-actions{display:flex;gap:6px;}
+
+/* ── MODAL ── */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.7);
+  backdrop-filter:blur(4px);
+  display:none;align-items:center;justify-content:center;
+  z-index:500;padding:20px;
+}
+.modal-overlay.open{display:flex;}
+.modal{
+  background:var(--card);border:1px solid var(--border2);
+  border-radius:14px;width:100%;max-width:520px;
+  max-height:90vh;overflow-y:auto;
+  animation:slideIn .3s both;
+}
+.modal-header{
+  padding:24px 28px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;background:var(--card);z-index:1;
+}
+.modal-title{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;}
+.modal-close{
+  background:none;border:none;color:var(--muted);
+  cursor:pointer;font-size:20px;transition:color .2s;
+  width:32px;height:32px;display:flex;align-items:center;justify-content:center;
+  border-radius:50%;
+}
+.modal-close:hover{color:var(--text);background:var(--border);}
+.modal-body{padding:28px;}
+.modal-footer{
+  padding:20px 28px;border-top:1px solid var(--border);
+  display:flex;justify-content:flex-end;gap:10px;
+}
+
+/* ── FORM ── */
+.field{margin-bottom:18px;}
+.field-label{
+  font-size:11px;color:var(--muted);text-transform:uppercase;
+  letter-spacing:1px;margin-bottom:8px;display:block;
+}
+.field-input,.field-select,.field-textarea{
+  width:100%;background:var(--deep);
+  border:1px solid var(--border2);border-radius:6px;
+  padding:12px 14px;color:var(--text);
+  font-size:14px;font-family:'DM Mono',monospace;
+  outline:none;transition:border-color .2s;
+}
+.field-input:focus,.field-select:focus,.field-textarea:focus{border-color:var(--emerald);}
+.field-select{cursor:pointer;}
+.field-select option{background:var(--card);}
+.field-textarea{resize:vertical;min-height:80px;}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+
+/* ── PET CARD ── */
+.pet-card{
+  background:var(--deep);border:1px solid var(--border);
+  border-radius:8px;padding:16px;
+  display:flex;align-items:center;gap:14px;
+  margin-bottom:10px;cursor:pointer;
+  transition:border-color .2s;
+}
+.pet-card:hover{border-color:var(--border2);}
+.pet-avatar{
+  width:44px;height:44px;border-radius:50%;
+  background:var(--emerald-dim);border:1px solid rgba(46,204,113,.2);
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;min-width:44px;
+}
+.pet-info{flex:1;}
+.pet-name{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;}
+.pet-meta{font-size:11px;color:var(--muted);margin-top:3px;}
+
+/* ── VACUNA ROW ── */
+.vac-row{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 0;border-bottom:1px solid var(--border);
+}
+.vac-row:last-child{border-bottom:none;}
+.vac-name{font-size:13px;color:var(--text);}
+.vac-date{font-size:11px;color:var(--muted);margin-top:2px;}
+
+/* ── CAJA ── */
+.caja-total{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:12px;
+  margin-bottom:20px;
+}
+.caja-card{
+  background:var(--deep);border:1px solid var(--border);
+  border-radius:8px;padding:16px;
+}
+.caja-val{
+  font-family:'Syne',sans-serif;font-size:22px;font-weight:800;
+  letter-spacing:-1px;
+}
+.caja-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-top:4px;}
+
+/* ── EMPTY STATE ── */
+.empty{
+  text-align:center;padding:60px 20px;
+}
+.empty-icon{font-size:48px;margin-bottom:16px;opacity:.4;}
+.empty-text{font-size:14px;color:var(--muted);}
+
+/* ── MOBILE ── */
+@media(max-width:768px){
+  .sidebar{
+    position:fixed;left:0;top:0;bottom:0;z-index:200;
+    transform:translateX(-100%);
+  }
+  .sidebar.open{transform:translateX(0);}
+  .sidebar-overlay{
+    position:fixed;inset:0;background:rgba(0,0,0,.5);
+    z-index:199;display:none;
+  }
+  .sidebar-overlay.open{display:block;}
+  .topbar-menu{display:flex;}
+  .stats-grid{grid-template-columns:repeat(2,1fr);}
+  .grid-2,.grid-3{grid-template-columns:1fr;}
+  .content{padding:16px;}
+  .topbar{padding:14px 16px;}
+  .field-row{grid-template-columns:1fr;}
+}
+@media(max-width:480px){
+  .stats-grid{grid-template-columns:1fr 1fr;}
+  .stat-val{font-size:22px;}
+  .caja-total{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<!-- LOADER -->
+<div id="loader">
+  <div class="loader-logo">Vet<em>OS</em></div>
+  <div class="loader-bar"><div class="loader-bar-fill"></div></div>
+</div>
+
+<!-- LOGIN -->
+<div id="loginScreen">
+  <div class="login-bg"></div>
+  <div class="login-glow"></div>
+  <div class="login-box">
+    <div class="login-logo">Vet<em>OS</em></div>
+    <div class="login-sub">Sistema de Gestión Veterinaria</div>
+    <div class="form-group">
+      <label class="form-label">Usuario</label>
+      <input class="form-input" id="lu" type="text" placeholder="veterinaria@clinica.com" autocomplete="username">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Contraseña</label>
+      <input class="form-input" id="lp" type="password" placeholder="••••••••" autocomplete="current-password">
+    </div>
+    <button class="btn-login" id="btnLogin" onclick="doLogin()">INGRESAR</button>
+    <div class="login-err" id="loginErr"></div>
+  </div>
+</div>
+
+<!-- SIDEBAR OVERLAY (mobile) -->
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+<!-- APP -->
+<div id="appShell" style="display:none;flex-direction:row;">
+
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">Vet<em>OS</em></div>
+    <div class="sidebar-clinic">
+      <div class="clinic-name" id="clinicName">Clínica Veterinaria</div>
+      <div class="clinic-plan">Plan Pro</div>
+    </div>
+    <div class="nav-section">Principal</div>
+    <a class="nav-item active" onclick="goTo('dashboard')" href="#">
+      <span class="nav-icon">📊</span>Dashboard
+    </a>
+    <a class="nav-item" onclick="goTo('agenda')" href="#">
+      <span class="nav-icon">📅</span>Agenda
+    </a>
+    <a class="nav-item" onclick="goTo('mascotas')" href="#">
+      <span class="nav-icon">🐾</span>Mascotas
+    </a>
+    <a class="nav-item" onclick="goTo('clientes')" href="#">
+      <span class="nav-icon">👥</span>Clientes
+    </a>
+    <div class="nav-section">Gestión</div>
+    <a class="nav-item" onclick="goTo('vacunas')" href="#">
+      <span class="nav-icon">💉</span>Vacunas
+    </a>
+    <a class="nav-item" onclick="goTo('caja')" href="#">
+      <span class="nav-icon">💰</span>Caja
+    </a>
+    <a class="nav-item" onclick="goTo('inventario')" href="#">
+      <span class="nav-icon">📦</span>Inventario
+    </a>
+    <div class="nav-section">Sistema</div>
+    <a class="nav-item" onclick="goTo('config')" href="#">
+      <span class="nav-icon">⚙️</span>Configuración
+    </a>
+    <div class="sidebar-bottom">
+      <button class="btn-logout" onclick="doLogout()">
+        <span>↩</span> Cerrar sesión
+      </button>
+    </div>
+  </aside>
+
+  <div class="main" id="mainArea">
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:14px;">
+        <button class="topbar-menu" onclick="toggleSidebar()">☰</button>
+        <div class="topbar-title" id="topbarTitle">Dashboard</div>
+      </div>
+      <div class="topbar-right">
+        <div class="topbar-date" id="topbarDate"></div>
+        <button class="btn btn-primary btn-sm" id="topbarBtn" onclick="topbarAction()">+ Nuevo turno</button>
+      </div>
+    </div>
+    <div class="content" id="content"></div>
+  </div>
+</div>
+
+<!-- MODALS -->
+<div class="modal-overlay" id="modalTurno">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modalTurnoTitle">Nuevo Turno</div>
+      <button class="modal-close" onclick="closeModal('modalTurno')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="field-row">
+        <div class="field">
+          <label class="field-label">Fecha</label>
+          <input class="field-input" id="tFecha" type="date">
+        </div>
+        <div class="field">
+          <label class="field-label">Hora</label>
+          <input class="field-input" id="tHora" type="time">
+        </div>
+      </div>
+      <div class="field">
+        <label class="field-label">Mascota</label>
+        <select class="field-select" id="tMascota">
+          <option value="">Seleccionar mascota...</option>
+        </select>
+      </div>
+      <div class="field">
+        <label class="field-label">Motivo de consulta</label>
+        <select class="field-select" id="tMotivo">
+          <option>Consulta general</option>
+          <option>Vacunación</option>
+          <option>Control de rutina</option>
+          <option>Cirugía</option>
+          <option>Urgencia</option>
+          <option>Desparasitación</option>
+          <option>Otro</option>
+        </select>
+      </div>
+      <div class="field">
+        <label class="field-label">Veterinario</label>
+        <select class="field-select" id="tVet">
+          <option>Dr. Principal</option>
+        </select>
+      </div>
+      <div class="field">
+        <label class="field-label">Notas</label>
+        <textarea class="field-textarea" id="tNotas" placeholder="Observaciones previas..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modalTurno')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarTurno()">Guardar turno</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalMascota">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Nueva Mascota</div>
+      <button class="modal-close" onclick="closeModal('modalMascota')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="field-row">
+        <div class="field">
+          <label class="field-label">Nombre de la mascota</label>
+          <input class="field-input" id="mNombre" type="text" placeholder="Max">
+        </div>
+        <div class="field">
+          <label class="field-label">Especie</label>
+          <select class="field-select" id="mEspecie">
+            <option>🐕 Perro</option>
+            <option>🐈 Gato</option>
+            <option>🐇 Conejo</option>
+            <option>🦜 Ave</option>
+            <option>🐹 Roedor</option>
+            <option>🐢 Reptil</option>
+            <option>Otro</option>
+          </select>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label class="field-label">Raza</label>
+          <input class="field-input" id="mRaza" type="text" placeholder="Labrador">
+        </div>
+        <div class="field">
+          <label class="field-label">Sexo</label>
+          <select class="field-select" id="mSexo">
+            <option>Macho</option>
+            <option>Hembra</option>
+          </select>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label class="field-label">Fecha de nacimiento</label>
+          <input class="field-input" id="mNacimiento" type="date">
+        </div>
+        <div class="field">
+          <label class="field-label">Peso (kg)</label>
+          <input class="field-input" id="mPeso" type="number" step="0.1" placeholder="5.5">
+        </div>
+      </div>
+      <div class="field">
+        <label class="field-label">Dueño</label>
+        <select class="field-select" id="mDueno">
+          <option value="">Seleccionar dueño...</option>
+        </select>
+      </div>
+      <div class="field">
+        <label class="field-label">Alergias / Observaciones</label>
+        <textarea class="field-textarea" id="mAlergias" placeholder="Alergias conocidas, condiciones especiales..."></textarea>
+      </div>
+      <div class="field">
+        <label class="field-label">Color / Señas particulares</label>
+        <input class="field-input" id="mColor" type="text" placeholder="Negro con manchas blancas">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modalMascota')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarMascota()">Guardar mascota</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalCliente">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Nuevo Cliente</div>
+      <button class="modal-close" onclick="closeModal('modalCliente')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="field-row">
+        <div class="field">
+          <label class="field-label">Nombre completo</label>
+          <input class="field-input" id="cNombre" type="text" placeholder="María González">
+        </div>
+        <div class="field">
+          <label class="field-label">Teléfono / WhatsApp</label>
+          <input class="field-input" id="cTel" type="tel" placeholder="0981 000 000">
+        </div>
+      </div>
+      <div class="field">
+        <label class="field-label">Email</label>
+        <input class="field-input" id="cEmail" type="email" placeholder="correo@ejemplo.com">
+      </div>
+      <div class="field">
+        <label class="field-label">Dirección</label>
+        <input class="field-input" id="cDir" type="text" placeholder="Av. España 1234, Asunción">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modalCliente')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarCliente()">Guardar cliente</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalVacuna">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Registrar Vacuna</div>
+      <button class="modal-close" onclick="closeModal('modalVacuna')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label class="field-label">Mascota</label>
+        <select class="field-select" id="vMascota"></select>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label class="field-label">Vacuna</label>
+          <select class="field-select" id="vNombre">
+            <option>Antirrábica</option>
+            <option>Parvovirus</option>
+            <option>Moquillo</option>
+            <option>Hepatitis</option>
+            <option>Leptospirosis</option>
+            <option>Traqueobronquitis</option>
+            <option>Triple felina</option>
+            <option>Leucemia felina</option>
+            <option>Otra</option>
+          </select>
+        </div>
+        <div class="field">
+          <label class="field-label">Fecha de aplicación</label>
+          <input class="field-input" id="vFecha" type="date">
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label class="field-label">Próxima dosis</label>
+          <input class="field-input" id="vProxima" type="date">
+        </div>
+        <div class="field">
+          <label class="field-label">Lote / Marca</label>
+          <input class="field-input" id="vLote" type="text" placeholder="Nobivac">
+        </div>
+      </div>
+      <div class="field">
+        <label class="field-label">Notas</label>
+        <textarea class="field-textarea" id="vNotas" placeholder="Observaciones de la aplicación..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modalVacuna')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarVacuna()">Registrar vacuna</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalCaja">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modalCajaTitle">Nuevo Ingreso</div>
+      <button class="modal-close" onclick="closeModal('modalCaja')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label class="field-label">Tipo</label>
+        <select class="field-select" id="cajaTipo">
+          <option value="ingreso">💚 Ingreso</option>
+          <option value="egreso">🔴 Egreso</option>
+        </select>
+      </div>
+      <div class="field">
+        <label class="field-label">Concepto</label>
+        <select class="field-select" id="cajaConcepto">
+          <option>Consulta general</option>
+          <option>Vacunación</option>
+          <option>Cirugía</option>
+          <option>Internación</option>
+          <option>Productos / Medicamentos</option>
+          <option>Baño y peluquería</option>
+          <option>Insumos</option>
+          <option>Servicios</option>
+          <option>Otro</option>
+        </select>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label class="field-label">Monto (₲)</label>
+          <input class="field-input" id="cajaMonto" type="number" placeholder="150000">
+        </div>
+        <div class="field">
+          <label class="field-label">Fecha</label>
+          <input class="field-input" id="cajaFecha" type="date">
+        </div>
+      </div>
+      <div class="field">
+        <label class="field-label">Cliente (opcional)</label>
+        <select class="field-select" id="cajaCliente">
+          <option value="">Sin especificar</option>
+        </select>
+      </div>
+      <div class="field">
+        <label class="field-label">Notas</label>
+        <input class="field-input" id="cajaNota" type="text" placeholder="Descripción adicional">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modalCaja')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarMovimiento()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalInventario">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Nuevo Producto</div>
+      <button class="modal-close" onclick="closeModal('modalInventario')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label class="field-label">Nombre del producto</label>
+        <input class="field-input" id="invNombre" type="text" placeholder="Vacuna Antirrábica">
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label class="field-label">Categoría</label>
+          <select class="field-select" id="invCat">
+            <option>Vacunas</option>
+            <option>Medicamentos</option>
+            <option>Antiparasitarios</option>
+            <option>Insumos</option>
+            <option>Alimentos</option>
+            <option>Accesorios</option>
+            <option>Otro</option>
+          </select>
+        </div>
+        <div class="field">
+          <label class="field-label">Stock actual</label>
+          <input class="field-input" id="invStock" type="number" placeholder="20">
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label class="field-label">Stock mínimo</label>
+          <input class="field-input" id="invMin" type="number" placeholder="5">
+        </div>
+        <div class="field">
+          <label class="field-label">Precio venta (₲)</label>
+          <input class="field-input" id="invPrecio" type="number" placeholder="85000">
+        </div>
+      </div>
+      <div class="field">
+        <label class="field-label">Proveedor</label>
+        <input class="field-input" id="invProv" type="text" placeholder="Distribuidora Veterinaria">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modalInventario')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarProducto()">Guardar producto</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── APP STATE ───
+const APP = {
+  seccion: 'dashboard',
+  turno: [],
+  mascotas: [],
+  clientes: [],
+  vacunas: [],
+  caja: [],
+  inventario: [],
+  config: { clinica: 'Clínica Veterinaria Demo', veterinario: 'Dr. Principal' }
+};
+
+// Demo data
+APP.clientes = [
+  {id:'C1', nombre:'Carlos Rodríguez', tel:'0981 234 567', email:'carlos@demo.com', dir:'Av. España 1234'},
+  {id:'C2', nombre:'Ana Méndez', tel:'0971 345 678', email:'ana@demo.com', dir:'Calle Palma 567'},
+  {id:'C3', nombre:'Luis Gómez', tel:'0991 456 789', email:'luis@demo.com', dir:'B. Mburucuya 890'}
+];
+APP.mascotas = [
+  {id:'M1', nombre:'Max', especie:'🐕 Perro', raza:'Labrador', sexo:'Macho', peso:28, dueno:'C1', nacimiento:'2021-03-15', alergias:'Ninguna', color:'Amarillo'},
+  {id:'M2', nombre:'Luna', especie:'🐈 Gato', raza:'Persa', sexo:'Hembra', peso:4.2, dueno:'C2', nacimiento:'2022-07-20', alergias:'Mariscos', color:'Blanco'},
+  {id:'M3', nombre:'Bunny', especie:'🐇 Conejo', raza:'Belier', sexo:'Hembra', peso:1.8, dueno:'C3', nacimiento:'2023-01-10', alergias:'Ninguna', color:'Gris'}
+];
+const hoy = new Date().toISOString().slice(0,10);
+APP.turno = [
+  {id:'T1', fecha:hoy, hora:'09:00', mascota:'M1', motivo:'Consulta general', vet:'Dr. Principal', estado:'Confirmado'},
+  {id:'T2', fecha:hoy, hora:'10:30', mascota:'M2', motivo:'Vacunación', vet:'Dr. Principal', estado:'En espera'},
+  {id:'T3', fecha:hoy, hora:'11:00', mascota:'M3', motivo:'Control', vet:'Dr. Principal', estado:'Confirmado'},
+];
+APP.vacunas = [
+  {id:'V1', mascota:'M1', nombre:'Antirrábica', fecha:'2025-06-15', proxima:'2026-06-15', lote:'Nobivac', notas:''},
+  {id:'V2', mascota:'M1', nombre:'Parvovirus', fecha:'2025-06-15', proxima:'2026-06-15', lote:'Nobivac', notas:''},
+  {id:'V3', mascota:'M2', nombre:'Triple felina', fecha:'2025-08-10', proxima:'2026-03-10', lote:'Felocell', notas:''},
+  {id:'V4', mascota:'M2', nombre:'Leucemia felina', fecha:'2025-08-10', proxima:'2026-04-10', lote:'Felocell', notas:''},
+];
+APP.caja = [
+  {id:'K1', fecha:hoy, tipo:'ingreso', concepto:'Consulta general', monto:80000, cliente:'C1', nota:'Max'},
+  {id:'K2', fecha:hoy, tipo:'ingreso', concepto:'Vacunación', monto:120000, cliente:'C2', nota:'Luna'},
+  {id:'K3', fecha:hoy, tipo:'egreso', concepto:'Insumos', monto:45000, cliente:'', nota:'Guantes y jeringas'},
+];
+APP.inventario = [
+  {id:'I1', nombre:'Vacuna Antirrábica', cat:'Vacunas', stock:18, min:5, precio:85000, prov:'Distribuidora Vet'},
+  {id:'I2', nombre:'Amoxicilina 250mg', cat:'Medicamentos', stock:3, min:10, precio:25000, prov:'Farmavida'},
+  {id:'I3', nombre:'Frontline Plus', cat:'Antiparasitarios', stock:12, min:5, precio:95000, prov:'Boehringer'},
+  {id:'I4', nombre:'Guantes descartables', cat:'Insumos', stock:2, min:20, precio:15000, prov:'MedSupply'},
+];
+
+// ─── INIT ───
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    document.getElementById('loader').style.opacity = '0';
+    document.getElementById('loader').style.transition = 'opacity .4s';
+    setTimeout(() => {
+      document.getElementById('loader').style.display = 'none';
+      document.getElementById('loginScreen').style.display = 'flex';
+    }, 400);
+  }, 1400);
+  const d = new Date();
+  document.getElementById('topbarDate').textContent =
+    d.toLocaleDateString('es-PY', {weekday:'long', day:'numeric', month:'long'});
+});
+
+// ─── LOGIN ───
+function doLogin() {
+  const u = document.getElementById('lu').value.trim();
+  const p = document.getElementById('lp').value;
+  const btn = document.getElementById('btnLogin');
+  const err = document.getElementById('loginErr');
+  if (!u || !p) { showLoginErr('Completá usuario y contraseña'); return; }
+  btn.textContent = 'INGRESANDO...'; btn.disabled = true;
+  setTimeout(() => {
+    // Demo: cualquier usuario/contraseña
+    btn.textContent = 'INGRESAR'; btn.disabled = false;
+    err.style.display = 'none';
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('appShell').style.display = 'flex';
+    document.getElementById('clinicName').textContent = APP.config.clinica;
+    goTo('dashboard');
+    try { document.documentElement.requestFullscreen?.(); } catch(e){}
+  }, 800);
+}
+function showLoginErr(msg) {
+  const err = document.getElementById('loginErr');
+  err.textContent = msg; err.style.display = 'block';
+}
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && document.getElementById('loginScreen').style.display === 'flex') doLogin();
+});
+
+function doLogout() {
+  if (!confirm('¿Cerrar sesión?')) return;
+  document.getElementById('appShell').style.display = 'none';
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('lp').value = '';
+  try { document.exitFullscreen?.(); } catch(e){}
+}
+
+// ─── NAVIGATION ───
+function goTo(sec) {
+  APP.seccion = sec;
+  closeSidebar();
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(el => {
+    if (el.getAttribute('onclick')?.includes(sec)) el.classList.add('active');
+  });
+  const titles = {
+    dashboard:'Dashboard', agenda:'Agenda', mascotas:'Mascotas',
+    clientes:'Clientes', vacunas:'Vacunas', caja:'Caja',
+    inventario:'Inventario', config:'Configuración'
+  };
+  const btns = {
+    dashboard:'+ Nuevo turno', agenda:'+ Nuevo turno', mascotas:'+ Nueva mascota',
+    clientes:'+ Nuevo cliente', vacunas:'+ Registrar vacuna',
+    caja:'+ Movimiento', inventario:'+ Producto', config:''
+  };
+  document.getElementById('topbarTitle').textContent = titles[sec] || sec;
+  const tb = document.getElementById('topbarBtn');
+  tb.textContent = btns[sec] || '';
+  tb.style.display = btns[sec] ? 'inline-flex' : 'none';
+  const renders = {
+    dashboard: renderDashboard, agenda: renderAgenda,
+    mascotas: renderMascotas, clientes: renderClientes,
+    vacunas: renderVacunas, caja: renderCaja,
+    inventario: renderInventario, config: renderConfig
+  };
+  const content = document.getElementById('content');
+  content.style.animation = 'none';
+  content.offsetHeight;
+  content.style.animation = 'slideIn .3s both';
+  (renders[sec] || (() => { content.innerHTML = '<div class="empty"><div class="empty-icon">🚧</div><div class="empty-text">En construcción</div></div>'; }))();
+}
+
+function topbarAction() {
+  const actions = {
+    dashboard: () => openModal('modalTurno'),
+    agenda: () => openModal('modalTurno'),
+    mascotas: () => openModal('modalMascota'),
+    clientes: () => openModal('modalCliente'),
+    vacunas: () => openModal('modalVacuna'),
+    caja: () => openModal('modalCaja'),
+    inventario: () => openModal('modalInventario'),
+  };
+  (actions[APP.seccion] || (() => {}))();
+}
+
+// ─── SIDEBAR ───
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebarOverlay').classList.toggle('open');
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('open');
+}
+
+// ─── MODALS ───
+function openModal(id) {
+  // Populate selects
+  const mSel = document.getElementById('tMascota');
+  const vSel = document.getElementById('vMascota');
+  const dSel = document.getElementById('mDueno');
+  const cSel = document.getElementById('cajaCliente');
+  if (mSel) { mSel.innerHTML = '<option value="">Seleccionar mascota...</option>'; APP.mascotas.forEach(m => { mSel.innerHTML += `<option value="${m.id}">${m.especie} ${m.nombre}</option>`; }); }
+  if (vSel) { vSel.innerHTML = ''; APP.mascotas.forEach(m => { vSel.innerHTML += `<option value="${m.id}">${m.especie} ${m.nombre}</option>`; }); }
+  if (dSel) { dSel.innerHTML = '<option value="">Seleccionar dueño...</option>'; APP.clientes.forEach(c => { dSel.innerHTML += `<option value="${c.id}">${c.nombre}</option>`; }); }
+  if (cSel) { cSel.innerHTML = '<option value="">Sin especificar</option>'; APP.clientes.forEach(c => { cSel.innerHTML += `<option value="${c.id}">${c.nombre}</option>`; }); }
+  // Set dates
+  const fd = document.getElementById('tFecha'); if(fd) fd.value = hoy;
+  const vfd = document.getElementById('vFecha'); if(vfd) vfd.value = hoy;
+  const cafd = document.getElementById('cajaFecha'); if(cafd) cafd.value = hoy;
+  document.getElementById(id).classList.add('open');
+}
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(o => {
+  o.addEventListener('click', e => { if(e.target === o) o.classList.remove('open'); });
+});
+
+// ─── HELPERS ───
+function getMascota(id) { return APP.mascotas.find(m=>m.id===id)||{}; }
+function getCliente(id) { return APP.clientes.find(c=>c.id===id)||{}; }
+function fmt(n) { return new Intl.NumberFormat('es-PY').format(n); }
+function diasRestantes(fecha) {
+  const d = new Date(fecha) - new Date();
+  return Math.ceil(d/86400000);
+}
+function uid() { return '_'+Math.random().toString(36).slice(2,8); }
+
+function vacunaBadge(proxima) {
+  const dias = diasRestantes(proxima);
+  if (dias < 0) return '<span class="badge badge-err">Vencida</span>';
+  if (dias <= 14) return `<span class="badge badge-warn">⚠ ${dias} días</span>`;
+  return '<span class="badge badge-ok">Al día</span>';
+}
+
+// ─── DASHBOARD ───
+function renderDashboard() {
+  const turnosHoy = APP.turno.filter(t => t.fecha === hoy);
+  const ingresosHoy = APP.caja.filter(m => m.fecha === hoy && m.tipo === 'ingreso').reduce((a,b) => a+b.monto, 0);
+  const mascotasTotal = APP.mascotas.length;
+  const vacVencidas = APP.vacunas.filter(v => diasRestantes(v.proxima) <= 14).length;
+  const stockBajo = APP.inventario.filter(i => i.stock <= i.min).length;
+
+  document.getElementById('content').innerHTML = `
+    <div class="stats-grid">
+      <div class="stat-card c-emerald">
+        <div class="stat-icon">📅</div>
+        <div class="stat-val">${turnosHoy.length}</div>
+        <div class="stat-label">Turnos hoy</div>
+        <div class="stat-delta up">▲ Agenda activa</div>
+      </div>
+      <div class="stat-card c-gold">
+        <div class="stat-icon">💰</div>
+        <div class="stat-val">₲ ${fmt(ingresosHoy)}</div>
+        <div class="stat-label">Ingresos hoy</div>
+        <div class="stat-delta up">▲ Del día</div>
+      </div>
+      <div class="stat-card c-blue">
+        <div class="stat-icon">🐾</div>
+        <div class="stat-val">${mascotasTotal}</div>
+        <div class="stat-label">Mascotas</div>
+        <div class="stat-delta up">Total registradas</div>
+      </div>
+      <div class="stat-card c-rose">
+        <div class="stat-icon">💉</div>
+        <div class="stat-val">${vacVencidas}</div>
+        <div class="stat-label">Vacunas urgentes</div>
+        <div class="stat-delta ${vacVencidas>0?'down':'up'}">${vacVencidas>0?'⚠ Atención requerida':'✓ Sin urgencias'}</div>
+      </div>
+    </div>
+
+    <div class="grid-3">
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">📅 Agenda de hoy</div>
+          <button class="btn btn-ghost btn-sm" onclick="goTo('agenda')">Ver todo →</button>
+        </div>
+        <div>
+          ${turnosHoy.length === 0 ? '<div class="empty"><div class="empty-icon">📅</div><div class="empty-text">No hay turnos hoy</div></div>' :
+            turnosHoy.map(t => {
+              const m = getMascota(t.mascota);
+              const c = getCliente(m.dueno);
+              return `
+              <div class="agenda-row" onclick="goTo('agenda')">
+                <div class="agenda-hour">${t.hora}</div>
+                <div class="agenda-pet-wrap">
+                  <div class="agenda-pet-name">${m.especie||'🐾'} ${m.nombre||'Mascota'}</div>
+                  <div class="agenda-pet-detail">${c.nombre||''} · ${t.motivo}</div>
+                </div>
+                <span class="badge ${t.estado==='Confirmado'?'badge-ok':t.estado==='En espera'?'badge-warn':'badge-muted'}">${t.estado}</span>
+              </div>`}).join('')}
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:16px;">
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">💉 Vacunas urgentes</div>
+          </div>
+          <div class="panel-body" style="padding:12px 16px;">
+            ${APP.vacunas.filter(v=>diasRestantes(v.proxima)<=30).map(v => {
+              const m = getMascota(v.mascota);
+              return `<div class="vac-row">
+                <div>
+                  <div class="vac-name">${m.nombre||'?'} · ${v.nombre}</div>
+                  <div class="vac-date">Vence: ${v.proxima}</div>
+                </div>
+                ${vacunaBadge(v.proxima)}
+              </div>`;
+            }).join('') || '<div class="empty" style="padding:20px"><div class="empty-text">Sin urgencias 🎉</div></div>'}
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">📦 Stock bajo</div>
+          </div>
+          <div class="panel-body" style="padding:12px 16px;">
+            ${APP.inventario.filter(i=>i.stock<=i.min).map(i => `
+              <div class="vac-row">
+                <div>
+                  <div class="vac-name">${i.nombre}</div>
+                  <div class="vac-date">Stock: ${i.stock} (mín: ${i.min})</div>
+                </div>
+                <span class="badge badge-err">⚠ Bajo</span>
+              </div>`).join('') || '<div class="empty" style="padding:20px"><div class="empty-text">Stock OK ✓</div></div>'}
+          </div>
+        </div>
+      </div>
+    </div>`;
+}
+
+// ─── AGENDA ───
+function renderAgenda() {
+  const turnosHoy = APP.turno.filter(t => t.fecha === hoy).sort((a,b) => a.hora.localeCompare(b.hora));
+  document.getElementById('content').innerHTML = `
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">Turnos de hoy — ${new Date().toLocaleDateString('es-PY',{weekday:'long',day:'numeric',month:'long'})}</div>
+        <button class="btn btn-primary btn-sm" onclick="openModal('modalTurno')">+ Nuevo turno</button>
+      </div>
+      <div>
+        ${turnosHoy.length === 0 ? '<div class="empty"><div class="empty-icon">📅</div><div class="empty-text">No hay turnos para hoy<br><small>Hacé clic en "+ Nuevo turno" para agregar</small></div></div>' :
+          turnosHoy.map(t => {
+            const m = getMascota(t.mascota);
+            const c = getCliente(m.dueno);
+            return `
+            <div class="agenda-row">
+              <div class="agenda-hour">${t.hora}</div>
+              <div class="agenda-pet-wrap">
+                <div class="agenda-pet-name">${m.especie||'🐾'} ${m.nombre||'Mascota'}</div>
+                <div class="agenda-pet-detail">${c.nombre||'Sin dueño'} · ${t.motivo}</div>
+              </div>
+              <div class="agenda-actions">
+                <span class="badge ${t.estado==='Confirmado'?'badge-ok':t.estado==='En espera'?'badge-warn':'badge-muted'}">${t.estado}</span>
+                <button class="btn-icon" onclick="cambiarEstado('${t.id}')" title="Cambiar estado">↺</button>
+                ${c.tel ? `<button class="btn-icon" onclick="whatsapp('${c.tel}','${m.nombre}')" title="WhatsApp">💬</button>` : ''}
+                <button class="btn-icon" onclick="eliminarTurno('${t.id}')" style="color:var(--rose)">✕</button>
+              </div>
+            </div>`;
+          }).join('')}
+      </div>
+    </div>`;
+}
+
+// ─── MASCOTAS ───
+function renderMascotas() {
+  document.getElementById('content').innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;">
+      ${APP.mascotas.length === 0 ? '<div class="empty" style="grid-column:1/-1"><div class="empty-icon">🐾</div><div class="empty-text">No hay mascotas registradas</div></div>' :
+        APP.mascotas.map(m => {
+          const c = getCliente(m.dueno);
+          const vacsMascota = APP.vacunas.filter(v => v.mascota === m.id);
+          const vacUrgentes = vacsMascota.filter(v => diasRestantes(v.proxima) <= 14).length;
+          return `
+          <div class="panel" style="cursor:pointer;" onclick="verMascota('${m.id}')">
+            <div class="panel-body">
+              <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px;">
+                <div class="pet-avatar" style="width:52px;height:52px;font-size:26px;">${m.especie.split(' ')[0]}</div>
+                <div>
+                  <div style="font-family:'Syne',sans-serif;font-size:17px;font-weight:700;">${m.nombre}</div>
+                  <div style="font-size:12px;color:var(--muted);">${m.raza} · ${m.sexo}</div>
+                </div>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
+                <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;">Peso</div><div style="font-size:14px;">${m.peso} kg</div></div>
+                <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;">Dueño</div><div style="font-size:13px;">${c.nombre||'—'}</div></div>
+              </div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                ${vacUrgentes > 0 ? `<span class="badge badge-warn">💉 ${vacUrgentes} vacuna${vacUrgentes>1?'s':''} urgente${vacUrgentes>1?'s':''}</span>` : '<span class="badge badge-ok">💉 Vacunas al día</span>'}
+                ${m.alergias && m.alergias !== 'Ninguna' ? '<span class="badge badge-err">⚠ Alergias</span>' : ''}
+              </div>
+            </div>
+          </div>`;
+        }).join('')}
+    </div>`;
+}
+
+function verMascota(id) {
+  const m = getMascota(id);
+  const c = getCliente(m.dueno);
+  const vacsMascota = APP.vacunas.filter(v => v.mascota === id);
+  const turnosMascota = APP.turno.filter(t => t.mascota === id);
+  document.getElementById('content').innerHTML = `
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px;">
+      <button class="btn btn-ghost btn-sm" onclick="renderMascotas()">← Volver</button>
+      <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:700;">${m.especie} ${m.nombre}</div>
+    </div>
+    <div class="grid-2">
+      <div class="panel">
+        <div class="panel-header"><div class="panel-title">🐾 Datos de la mascota</div></div>
+        <div class="panel-body">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+            ${[['Raza',m.raza],['Sexo',m.sexo],['Peso',m.peso+' kg'],['Nacimiento',m.nacimiento],['Color',m.color||'—'],['Dueño',c.nombre||'—'],['Tel. dueño',c.tel||'—'],['Alergias',m.alergias||'Ninguna']].map(([l,v])=>`
+            <div><div class="field-label">${l}</div><div style="font-size:14px;">${v}</div></div>`).join('')}
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">💉 Vacunas</div>
+          <button class="btn btn-ghost btn-sm" onclick="openModal('modalVacuna')">+ Agregar</button>
+        </div>
+        <div class="panel-body" style="padding:0;">
+          ${vacsMascota.length === 0 ? '<div class="empty"><div class="empty-text">Sin vacunas registradas</div></div>' :
+            vacsMascota.map(v => `
+            <div class="vac-row" style="padding:12px 20px;">
+              <div>
+                <div style="font-size:13px;font-weight:500;">${v.nombre}</div>
+                <div style="font-size:11px;color:var(--muted);">Aplicada: ${v.fecha} · Próxima: ${v.proxima}</div>
+                ${v.lote ? `<div style="font-size:10px;color:var(--muted);">${v.lote}</div>` : ''}
+              </div>
+              ${vacunaBadge(v.proxima)}
+            </div>`).join('')}
+        </div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">📋 Historial de consultas</div>
+        <button class="btn btn-ghost btn-sm" onclick="openModal('modalTurno')">+ Nuevo turno</button>
+      </div>
+      ${turnosMascota.length === 0 ? '<div class="empty"><div class="empty-text">Sin consultas registradas</div></div>' :
+        `<table class="table"><thead><tr><th>Fecha</th><th>Hora</th><th>Motivo</th><th>Veterinario</th><th>Estado</th></tr></thead><tbody>
+        ${turnosMascota.map(t=>`<tr><td>${t.fecha}</td><td>${t.hora}</td><td>${t.motivo}</td><td>${t.vet}</td><td><span class="badge badge-ok">${t.estado}</span></td></tr>`).join('')}
+        </tbody></table>`}
+    </div>`;
+}
+
+// ─── CLIENTES ───
+function renderClientes() {
+  document.getElementById('content').innerHTML = `
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">Clientes registrados</div>
+        <button class="btn btn-primary btn-sm" onclick="openModal('modalCliente')">+ Nuevo cliente</button>
+      </div>
+      ${APP.clientes.length === 0 ? '<div class="empty"><div class="empty-icon">👥</div><div class="empty-text">No hay clientes registrados</div></div>' :
+        `<table class="table"><thead><tr><th>Nombre</th><th>Teléfono</th><th>Email</th><th>Mascotas</th><th>Acciones</th></tr></thead><tbody>
+        ${APP.clientes.map(c => {
+          const mascs = APP.mascotas.filter(m => m.dueno === c.id);
+          return `<tr>
+            <td class="table-name">${c.nombre}</td>
+            <td>${c.tel}</td>
+            <td style="color:var(--muted)">${c.email||'—'}</td>
+            <td>${mascs.map(m=>`<span class="badge badge-blue">${m.especie.split(' ')[0]} ${m.nombre}</span>`).join(' ')||'—'}</td>
+            <td><div style="display:flex;gap:6px;">
+              ${c.tel?`<button class="btn-icon" onclick="whatsapp('${c.tel}','')" title="WhatsApp">💬</button>`:''}
+              <button class="btn-icon btn-danger" onclick="eliminarCliente('${c.id}')">✕</button>
+            </div></td>
+          </tr>`;
+        }).join('')}
+        </tbody></table>`}
+    </div>`;
+}
+
+// ─── VACUNAS ───
+function renderVacunas() {
+  const urgentes = APP.vacunas.filter(v => diasRestantes(v.proxima) <= 14);
+  const resto = APP.vacunas.filter(v => diasRestantes(v.proxima) > 14);
+  document.getElementById('content').innerHTML = `
+    ${urgentes.length > 0 ? `
+    <div class="panel" style="margin-bottom:20px;border-color:rgba(200,169,110,.3);">
+      <div class="panel-header" style="background:rgba(200,169,110,.05);">
+        <div class="panel-title" style="color:var(--gold);">⚠ Vacunas urgentes (${urgentes.length})</div>
+      </div>
+      <table class="table"><thead><tr><th>Mascota</th><th>Vacuna</th><th>Próxima dosis</th><th>Estado</th><th>WhatsApp</th></tr></thead><tbody>
+        ${urgentes.map(v => {
+          const m = getMascota(v.mascota);
+          const c = getCliente(m.dueno);
+          return `<tr><td class="table-name">${m.especie||''} ${m.nombre||'?'}</td><td>${v.nombre}</td><td>${v.proxima}</td><td>${vacunaBadge(v.proxima)}</td>
+          <td>${c.tel?`<button class="btn-icon" onclick="whatsappVacuna('${c.tel}','${m.nombre}','${v.nombre}','${v.proxima}')">💬 Avisar</button>`:'—'}</td></tr>`;
+        }).join('')}
+      </tbody></table>
+    </div>` : ''}
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">💉 Todas las vacunas</div>
+        <button class="btn btn-primary btn-sm" onclick="openModal('modalVacuna')">+ Registrar</button>
+      </div>
+      ${APP.vacunas.length === 0 ? '<div class="empty"><div class="empty-icon">💉</div><div class="empty-text">No hay vacunas registradas</div></div>' :
+        `<table class="table"><thead><tr><th>Mascota</th><th>Dueño</th><th>Vacuna</th><th>Aplicada</th><th>Próxima</th><th>Estado</th></tr></thead><tbody>
+        ${resto.map(v=>{
+          const m=getMascota(v.mascota); const c=getCliente(m.dueno);
+          return `<tr><td class="table-name">${m.especie||''} ${m.nombre||'?'}</td><td>${c.nombre||'—'}</td><td>${v.nombre}</td><td>${v.fecha}</td><td>${v.proxima}</td><td>${vacunaBadge(v.proxima)}</td></tr>`;
+        }).join('')}
+        </tbody></table>`}
+    </div>`;
+}
+
+// ─── CAJA ───
+function renderCaja() {
+  const ingresos = APP.caja.filter(m=>m.fecha===hoy&&m.tipo==='ingreso').reduce((a,b)=>a+b.monto,0);
+  const egresos = APP.caja.filter(m=>m.fecha===hoy&&m.tipo==='egreso').reduce((a,b)=>a+b.monto,0);
+  document.getElementById('content').innerHTML = `
+    <div class="caja-total">
+      <div class="caja-card" style="border-color:rgba(46,204,113,.3);">
+        <div class="caja-val" style="color:var(--emerald);">₲ ${fmt(ingresos)}</div>
+        <div class="caja-label">Ingresos hoy</div>
+      </div>
+      <div class="caja-card" style="border-color:rgba(224,92,92,.3);">
+        <div class="caja-val" style="color:var(--rose);">₲ ${fmt(egresos)}</div>
+        <div class="caja-label">Egresos hoy</div>
+      </div>
+      <div class="caja-card">
+        <div class="caja-val" style="color:${ingresos-egresos>=0?'var(--emerald)':'var(--rose)'};">₲ ${fmt(ingresos-egresos)}</div>
+        <div class="caja-label">Neto del día</div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">Movimientos de hoy</div>
+        <button class="btn btn-primary btn-sm" onclick="openModal('modalCaja')">+ Movimiento</button>
+      </div>
+      ${APP.caja.filter(m=>m.fecha===hoy).length===0 ? '<div class="empty"><div class="empty-icon">💰</div><div class="empty-text">Sin movimientos hoy</div></div>' :
+        `<table class="table"><thead><tr><th>Tipo</th><th>Concepto</th><th>Cliente</th><th>Nota</th><th>Monto</th><th></th></tr></thead><tbody>
+        ${APP.caja.filter(m=>m.fecha===hoy).map(m=>{
+          const c=getCliente(m.cliente);
+          return `<tr>
+            <td><span class="badge ${m.tipo==='ingreso'?'badge-ok':'badge-err'}">${m.tipo==='ingreso'?'+ Ingreso':'- Egreso'}</span></td>
+            <td>${m.concepto}</td>
+            <td>${c.nombre||'—'}</td>
+            <td style="color:var(--muted)">${m.nota||'—'}</td>
+            <td style="font-family:'Syne',sans-serif;font-weight:700;color:${m.tipo==='ingreso'?'var(--emerald)':'var(--rose)'};">${m.tipo==='ingreso'?'+':'-'} ₲ ${fmt(m.monto)}</td>
+            <td><button class="btn-icon btn-danger" onclick="eliminarMovimiento('${m.id}')">✕</button></td>
+          </tr>`;
+        }).join('')}
+        </tbody></table>`}
+    </div>`;
+}
+
+// ─── INVENTARIO ───
+function renderInventario() {
+  const stockBajo = APP.inventario.filter(i=>i.stock<=i.min);
+  document.getElementById('content').innerHTML = `
+    ${stockBajo.length>0?`
+    <div style="background:rgba(224,92,92,.08);border:1px solid rgba(224,92,92,.2);border-radius:8px;padding:14px 18px;margin-bottom:20px;font-size:13px;color:var(--rose);">
+      ⚠ <strong>${stockBajo.length} producto${stockBajo.length>1?'s':''}</strong> con stock bajo del mínimo: ${stockBajo.map(i=>i.nombre).join(', ')}
+    </div>`:''}
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">📦 Inventario</div>
+        <button class="btn btn-primary btn-sm" onclick="openModal('modalInventario')">+ Producto</button>
+      </div>
+      ${APP.inventario.length===0?'<div class="empty"><div class="empty-icon">📦</div><div class="empty-text">No hay productos registrados</div></div>':
+        `<table class="table"><thead><tr><th>Producto</th><th>Categoría</th><th>Stock</th><th>Mínimo</th><th>Precio</th><th>Estado</th><th></th></tr></thead><tbody>
+        ${APP.inventario.map(i=>`<tr>
+          <td class="table-name">${i.nombre}</td>
+          <td><span class="badge badge-blue">${i.cat}</span></td>
+          <td style="font-family:'Syne',sans-serif;font-weight:700;color:${i.stock<=i.min?'var(--rose)':'var(--emerald)'};">${i.stock}</td>
+          <td style="color:var(--muted)">${i.min}</td>
+          <td>₲ ${fmt(i.precio)}</td>
+          <td>${i.stock<=i.min?'<span class="badge badge-err">⚠ Bajo</span>':'<span class="badge badge-ok">OK</span>'}</td>
+          <td><button class="btn-icon btn-danger" onclick="eliminarProducto('${i.id}')">✕</button></td>
+        </tr>`).join('')}
+        </tbody></table>`}
+    </div>`;
+}
+
+// ─── CONFIG ───
+function renderConfig() {
+  document.getElementById('content').innerHTML = `
+    <div class="panel" style="max-width:560px;">
+      <div class="panel-header"><div class="panel-title">⚙️ Configuración de la clínica</div></div>
+      <div class="panel-body">
+        <div class="field">
+          <label class="field-label">Nombre de la clínica</label>
+          <input class="field-input" id="cfgClinica" value="${APP.config.clinica}">
+        </div>
+        <div class="field">
+          <label class="field-label">Veterinario principal</label>
+          <input class="field-input" id="cfgVet" value="${APP.config.veterinario}">
+        </div>
+        <div class="field">
+          <label class="field-label">Teléfono / WhatsApp</label>
+          <input class="field-input" id="cfgTel" placeholder="0981 000 000">
+        </div>
+        <div class="field">
+          <label class="field-label">Horario de atención</label>
+          <div class="field-row">
+            <input class="field-input" id="cfgApertura" type="time" value="08:00">
+            <input class="field-input" id="cfgCierre" type="time" value="18:00">
+          </div>
+        </div>
+        <button class="btn btn-primary" onclick="guardarConfig()">Guardar cambios</button>
+      </div>
+    </div>`;
+}
+
+// ─── SAVE ACTIONS ───
+function guardarTurno() {
+  const t = {
+    id: uid(),
+    fecha: document.getElementById('tFecha').value,
+    hora: document.getElementById('tHora').value,
+    mascota: document.getElementById('tMascota').value,
+    motivo: document.getElementById('tMotivo').value,
+    vet: document.getElementById('tVet').value,
+    notas: document.getElementById('tNotas').value,
+    estado: 'Confirmado'
+  };
+  if (!t.fecha || !t.hora || !t.mascota) { alert('Completá fecha, hora y mascota'); return; }
+  APP.turno.push(t);
+  closeModal('modalTurno');
+  goTo(APP.seccion);
+}
+
+function guardarMascota() {
+  const m = {
+    id: uid(),
+    nombre: document.getElementById('mNombre').value,
+    especie: document.getElementById('mEspecie').value,
+    raza: document.getElementById('mRaza').value,
+    sexo: document.getElementById('mSexo').value,
+    nacimiento: document.getElementById('mNacimiento').value,
+    peso: parseFloat(document.getElementById('mPeso').value)||0,
+    dueno: document.getElementById('mDueno').value,
+    alergias: document.getElementById('mAlergias').value,
+    color: document.getElementById('mColor').value
+  };
+  if (!m.nombre) { alert('Ingresá el nombre de la mascota'); return; }
+  APP.mascotas.push(m);
+  closeModal('modalMascota');
+  goTo(APP.seccion);
+}
+
+function guardarCliente() {
+  const c = {
+    id: uid(),
+    nombre: document.getElementById('cNombre').value,
+    tel: document.getElementById('cTel').value,
+    email: document.getElementById('cEmail').value,
+    dir: document.getElementById('cDir').value
+  };
+  if (!c.nombre) { alert('Ingresá el nombre del cliente'); return; }
+  APP.clientes.push(c);
+  closeModal('modalCliente');
+  goTo(APP.seccion);
+}
+
+function guardarVacuna() {
+  const v = {
+    id: uid(),
+    mascota: document.getElementById('vMascota').value,
+    nombre: document.getElementById('vNombre').value,
+    fecha: document.getElementById('vFecha').value,
+    proxima: document.getElementById('vProxima').value,
+    lote: document.getElementById('vLote').value,
+    notas: document.getElementById('vNotas').value
+  };
+  if (!v.mascota || !v.fecha || !v.proxima) { alert('Completá todos los campos requeridos'); return; }
+  APP.vacunas.push(v);
+  closeModal('modalVacuna');
+  goTo(APP.seccion);
+}
+
+function guardarMovimiento() {
+  const m = {
+    id: uid(),
+    fecha: document.getElementById('cajaFecha').value,
+    tipo: document.getElementById('cajaTipo').value,
+    concepto: document.getElementById('cajaConcepto').value,
+    monto: parseInt(document.getElementById('cajaMonto').value)||0,
+    cliente: document.getElementById('cajaCliente').value,
+    nota: document.getElementById('cajaNota').value
+  };
+  if (!m.monto) { alert('Ingresá el monto'); return; }
+  APP.caja.push(m);
+  closeModal('modalCaja');
+  goTo(APP.seccion);
+}
+
+function guardarProducto() {
+  const i = {
+    id: uid(),
+    nombre: document.getElementById('invNombre').value,
+    cat: document.getElementById('invCat').value,
+    stock: parseInt(document.getElementById('invStock').value)||0,
+    min: parseInt(document.getElementById('invMin').value)||0,
+    precio: parseInt(document.getElementById('invPrecio').value)||0,
+    prov: document.getElementById('invProv').value
+  };
+  if (!i.nombre) { alert('Ingresá el nombre del producto'); return; }
+  APP.inventario.push(i);
+  closeModal('modalInventario');
+  goTo(APP.seccion);
+}
+
+function guardarConfig() {
+  APP.config.clinica = document.getElementById('cfgClinica').value;
+  APP.config.veterinario = document.getElementById('cfgVet').value;
+  document.getElementById('clinicName').textContent = APP.config.clinica;
+  alert('✓ Configuración guardada');
+}
+
+// ─── ELIMINAR ───
+function eliminarTurno(id) {
+  if (!confirm('¿Eliminar este turno?')) return;
+  APP.turno = APP.turno.filter(t=>t.id!==id);
+  goTo(APP.seccion);
+}
+function eliminarCliente(id) {
+  if (!confirm('¿Eliminar este cliente?')) return;
+  APP.clientes = APP.clientes.filter(c=>c.id!==id);
+  goTo(APP.seccion);
+}
+function eliminarMovimiento(id) {
+  if (!confirm('¿Eliminar este movimiento?')) return;
+  APP.caja = APP.caja.filter(m=>m.id!==id);
+  goTo(APP.seccion);
+}
+function eliminarProducto(id) {
+  if (!confirm('¿Eliminar este producto?')) return;
+  APP.inventario = APP.inventario.filter(i=>i.id!==id);
+  goTo(APP.seccion);
+}
+
+// ─── ESTADO TURNO ───
+function cambiarEstado(id) {
+  const estados = ['Confirmado','En espera','En consulta','Completado','Cancelado'];
+  const t = APP.turno.find(t=>t.id===id);
+  if (!t) return;
+  const idx = estados.indexOf(t.estado);
+  t.estado = estados[(idx+1) % estados.length];
+  goTo(APP.seccion);
+}
+
+// ─── WHATSAPP ───
+function whatsapp(tel, mascota) {
+  const num = tel.replace(/\D/g,'');
+  const msg = mascota ? `Hola! Le contactamos de la clínica por el turno de ${mascota}.` : 'Hola! Le contactamos de la clínica veterinaria.';
+  window.open(`https://wa.me/595${num}?text=${encodeURIComponent(msg)}`, '_blank');
+}
+function whatsappVacuna(tel, mascota, vacuna, fecha) {
+  const num = tel.replace(/\D/g,'');
+  const msg = `Hola! Le recordamos que ${mascota} tiene pendiente la vacuna *${vacuna}*. La próxima dosis vence el ${fecha}. Comuníquese para coordinar el turno. 🐾`;
+  window.open(`https://wa.me/595${num}?text=${encodeURIComponent(msg)}`, '_blank');
+}
+</script>
+</body>
+</html>
