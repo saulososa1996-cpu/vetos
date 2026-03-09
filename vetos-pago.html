@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VetOS — Pagar suscripción</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f5f4f0;--white:#fff;--border:#e4e2db;--green:#18916e;--green-l:#1db88c;--green-bg:#f0faf6;--green-dim:rgba(24,145,110,.1);--amber:#c77c1a;--amber-bg:#fef9ee;--text:#18170f;--text2:#4a4840;--muted:#9a978e;--shadow:0 1px 4px rgba(0,0,0,.06);--shadow-md:0 4px 20px rgba(0,0,0,.08);--shadow-lg:0 16px 48px rgba(0,0,0,.1);--r:16px;}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100%;-webkit-font-smoothing:antialiased;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(24,145,110,.3)}50%{box-shadow:0 0 0 8px rgba(24,145,110,0)}}
+
+/* HEADER */
+.header{background:var(--white);border-bottom:1px solid var(--border);padding:16px 24px;display:flex;align-items:center;justify-content:space-between;}
+.brand{font-family:'Playfair Display',serif;font-size:26px;font-weight:900;}
+.brand em{color:var(--green);font-style:italic;}
+.brand-sub{font-size:11px;color:var(--muted);font-weight:500;margin-top:1px;}
+.secure{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);font-weight:500;}
+
+/* LAYOUT */
+.wrap{max-width:860px;margin:0 auto;padding:40px 20px;}
+.hero{text-align:center;margin-bottom:40px;animation:fadeUp .5s both;}
+.hero-title{font-family:'Playfair Display',serif;font-size:34px;font-weight:900;line-height:1.2;margin-bottom:12px;}
+.hero-title em{color:var(--green);font-style:italic;}
+.hero-sub{font-size:15px;color:var(--text2);max-width:500px;margin:0 auto;}
+
+/* PLANES */
+.planes{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:40px;animation:fadeUp .5s .1s both;}
+.plan{background:var(--white);border:2px solid var(--border);border-radius:var(--r);padding:24px;cursor:pointer;transition:all .2s;position:relative;}
+.plan:hover{border-color:var(--green);transform:translateY(-3px);box-shadow:var(--shadow-md);}
+.plan.sel{border-color:var(--green);background:var(--green-bg);box-shadow:0 0 0 4px var(--green-dim);}
+.plan.dest{border-color:var(--green);}
+.plan-badge{position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:var(--green);color:white;font-size:11px;font-weight:700;padding:3px 14px;border-radius:20px;white-space:nowrap;}
+.plan-nom{font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;}
+.plan-precio{font-family:'Playfair Display',serif;font-size:30px;font-weight:900;color:var(--text);line-height:1;}
+.plan-mes{font-size:12px;color:var(--muted);margin-top:3px;}
+.plan-feats{margin-top:16px;display:flex;flex-direction:column;gap:7px;}
+.plan-f{font-size:12px;color:var(--text2);display:flex;align-items:center;gap:7px;}
+.plan-f::before{content:'✓';color:var(--green);font-weight:700;flex-shrink:0;}
+.plan-check{position:absolute;top:14px;right:14px;width:22px;height:22px;border-radius:50%;background:var(--green);display:none;align-items:center;justify-content:center;color:white;font-size:12px;}
+.plan.sel .plan-check{display:flex;}
+
+/* FORM */
+.form-wrap{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:32px;margin-bottom:24px;animation:fadeUp .5s .2s both;box-shadow:var(--shadow);}
+.form-title{font-family:'Playfair Display',serif;font-size:20px;font-weight:700;margin-bottom:24px;padding-bottom:16px;border-bottom:1px solid var(--border);}
+.fr{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.fd{margin-bottom:16px;}
+.fdl{font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.9px;margin-bottom:7px;display:block;}
+.fdi{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:10px;padding:13px 14px;color:var(--text);font-size:14px;font-family:'DM Sans',sans-serif;outline:none;transition:border-color .15s,box-shadow .15s;}
+.fdi:focus{border-color:var(--green);box-shadow:0 0 0 3px var(--green-dim);background:var(--white);}
+.fdi::placeholder{color:var(--muted);}
+
+/* RESUMEN */
+.resumen{background:var(--green-bg);border:1.5px solid rgba(24,145,110,.2);border-radius:var(--r);padding:22px;margin-bottom:24px;animation:fadeUp .5s .3s both;}
+.res-title{font-size:12px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px;}
+.res-row{display:flex;justify-content:space-between;align-items:center;font-size:14px;color:var(--text2);margin-bottom:10px;}
+.res-row:last-child{margin-bottom:0;padding-top:10px;border-top:1px solid rgba(24,145,110,.2);font-weight:700;color:var(--text);font-size:16px;}
+
+/* CUENTAS */
+.cuentas{background:var(--white);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:24px;animation:fadeUp .5s .35s both;box-shadow:var(--shadow);}
+.cuentas-header{padding:18px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.cuentas-title{font-family:'Playfair Display',serif;font-size:18px;font-weight:700;}
+.titular{background:var(--bg);padding:14px 24px;border-bottom:1px solid var(--border);font-size:13px;color:var(--text2);}
+.titular strong{color:var(--text);font-weight:700;}
+.cuenta{display:flex;align-items:center;justify-content:space-between;padding:16px 24px;border-bottom:1px solid var(--border);transition:background .15s;}
+.cuenta:last-child{border-bottom:none;}
+.cuenta:hover{background:var(--bg);}
+.cuenta-left{display:flex;align-items:center;gap:14px;}
+.banco-logo{width:48px;height:28px;object-fit:contain;border-radius:4px;}
+.banco-nombre{font-size:13px;font-weight:700;color:var(--text);}
+.banco-tipo{font-size:11px;color:var(--muted);margin-top:2px;}
+.cuenta-num{font-family:'DM Sans',sans-serif;font-size:16px;font-weight:700;color:var(--text);letter-spacing:.5px;}
+.btn-copy{background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:7px 14px;font-size:12px;font-weight:600;cursor:pointer;color:var(--text2);transition:all .15s;font-family:'DM Sans',sans-serif;}
+.btn-copy:hover{border-color:var(--green);color:var(--green);background:var(--green-bg);}
+.btn-copy.copied{border-color:var(--green);color:var(--green);background:var(--green-bg);}
+
+/* PASOS */
+.pasos{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:32px;animation:fadeUp .5s .4s both;}
+.paso{text-align:center;padding:20px 16px;}
+.paso-num{width:36px;height:36px;border-radius:50%;background:var(--green-bg);border:2px solid rgba(24,145,110,.2);color:var(--green);font-weight:700;font-size:15px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;}
+.paso-titulo{font-size:13px;font-weight:700;margin-bottom:6px;}
+.paso-desc{font-size:12px;color:var(--muted);line-height:1.6;}
+
+/* BTN PRINCIPAL */
+.btn-wa{display:flex;align-items:center;justify-content:center;gap:12px;width:100%;background:#25d366;color:white;border:none;border-radius:12px;padding:18px;font-family:'DM Sans',sans-serif;font-size:16px;font-weight:700;cursor:pointer;transition:all .2s;text-decoration:none;animation:pulse 2s 1s infinite;}
+.btn-wa:hover{background:#22c45d;transform:translateY(-2px);box-shadow:0 8px 24px rgba(37,211,102,.35);}
+.btn-wa-ico{font-size:22px;}
+.nota{text-align:center;font-size:12px;color:var(--muted);margin-top:14px;line-height:1.6;}
+
+/* BANCO COLORS */
+.gnb{background:#e8f4ea;}
+.interfisa{background:#e8eef8;}
+.continental{background:#e8f0ea;}
+.ueno{background:#e8f5e8;}
+.itau{background:#fff0e8;}
+
+@media(max-width:680px){
+  .planes{grid-template-columns:1fr;}
+  .fr{grid-template-columns:1fr;}
+  .pasos{grid-template-columns:1fr;}
+  .hero-title{font-size:26px;}
+  .wrap{padding:24px 16px;}
+  .cuenta{flex-wrap:wrap;gap:10px;}
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <div class="brand">Vet<em>OS</em></div>
+    <div class="brand-sub">Sistema de gestión veterinaria</div>
+  </div>
+  <div class="secure">🔒 Pago seguro · Paraguay</div>
+</div>
+
+<div class="wrap">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-title">Elegí tu plan y <em>empezá hoy</em></div>
+    <div class="hero-sub">Sin contratos, sin comisiones. Cancelá cuando quieras.</div>
+  </div>
+
+  <!-- PLANES -->
+  <div class="planes">
+    <div class="plan" id="p1" onclick="selPlan(1)">
+      <div class="plan-check">✓</div>
+      <div class="plan-nom">Básico</div>
+      <div class="plan-precio">₲ 180.000</div>
+      <div class="plan-mes">por mes</div>
+      <div class="plan-feats">
+        <div class="plan-f">Hasta 50 mascotas</div>
+        <div class="plan-f">Agenda y turnos</div>
+        <div class="plan-f">Control de vacunas</div>
+        <div class="plan-f">Caja diaria</div>
+      </div>
+    </div>
+    <div class="plan dest sel" id="p2" onclick="selPlan(2)">
+      <div class="plan-badge">⭐ Más elegido</div>
+      <div class="plan-check">✓</div>
+      <div class="plan-nom">Pro</div>
+      <div class="plan-precio">₲ 280.000</div>
+      <div class="plan-mes">por mes</div>
+      <div class="plan-feats">
+        <div class="plan-f">Mascotas ilimitadas</div>
+        <div class="plan-f">Todo lo del Básico</div>
+        <div class="plan-f">Inventario completo</div>
+        <div class="plan-f">Reportes y estadísticas</div>
+        <div class="plan-f">Soporte prioritario</div>
+      </div>
+    </div>
+    <div class="plan" id="p3" onclick="selPlan(3)">
+      <div class="plan-check">✓</div>
+      <div class="plan-nom">Premium</div>
+      <div class="plan-precio">₲ 420.000</div>
+      <div class="plan-mes">por mes</div>
+      <div class="plan-feats">
+        <div class="plan-f">Todo lo del Pro</div>
+        <div class="plan-f">Múltiples sucursales</div>
+        <div class="plan-f">Recordatorios automáticos</div>
+        <div class="plan-f">Personalización de marca</div>
+        <div class="plan-f">Soporte 24/7</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FORM DATOS -->
+  <div class="form-wrap">
+    <div class="form-title">📋 Tus datos</div>
+    <div class="fr">
+      <div class="fd"><label class="fdl">Nombre de la clínica</label><input class="fdi" id="fClinica" placeholder="Clínica Veterinaria San Blas" oninput="actualizar()"></div>
+      <div class="fd"><label class="fdl">Tu nombre</label><input class="fdi" id="fNombre" placeholder="Dr. Juan Pérez" oninput="actualizar()"></div>
+    </div>
+    <div class="fr">
+      <div class="fd"><label class="fdl">Email (será tu usuario)</label><input class="fdi" id="fEmail" type="email" placeholder="juan@clinica.com" oninput="actualizar()"></div>
+      <div class="fd"><label class="fdl">WhatsApp</label><input class="fdi" id="fWa" type="tel" placeholder="0981 000 000" oninput="actualizar()"></div>
+    </div>
+  </div>
+
+  <!-- RESUMEN -->
+  <div class="resumen">
+    <div class="res-title">Resumen de tu pedido</div>
+    <div class="res-row"><span>Plan seleccionado</span><span id="rPlan">Pro</span></div>
+    <div class="res-row"><span>Período</span><span>1 mes (30 días)</span></div>
+    <div class="res-row"><span>Clínica</span><span id="rClinica">—</span></div>
+    <div class="res-row"><span>Total a transferir</span><span id="rTotal" style="color:var(--green)">₲ 280.000</span></div>
+  </div>
+
+  <!-- CUENTAS BANCARIAS -->
+  <div class="cuentas">
+    <div class="cuentas-header">
+      <div class="cuentas-title">💳 Datos para transferencia</div>
+      <span style="font-size:12px;color:var(--muted)">Transferencia interbancaria gratuita</span>
+    </div>
+    <div class="titular">Titular: <strong>Sandro Saul Sosa Peralta</strong> &nbsp;·&nbsp; CI: <strong>4.940.814</strong></div>
+
+    <div class="cuenta">
+      <div class="cuenta-left">
+        <div style="width:52px;height:32px;border-radius:6px;background:#e8f4ea;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#2e7d32;">GNB</div>
+        <div><div class="banco-nombre">Banco GNB Paraguay</div><div class="banco-tipo">Cuenta corriente</div></div>
+      </div>
+      <div class="cuenta-num">129 056 75 001</div>
+      <button class="btn-copy" onclick="copiar('129 056 75 001', this)">Copiar</button>
+    </div>
+
+    <div class="cuenta">
+      <div class="cuenta-left">
+        <div style="width:52px;height:32px;border-radius:6px;background:#e8eef8;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#1a3a7c;">IFS</div>
+        <div><div class="banco-nombre">Interfisa Banco</div><div class="banco-tipo">Cuenta corriente</div></div>
+      </div>
+      <div class="cuenta-num">500 15 779</div>
+      <button class="btn-copy" onclick="copiar('500 15 779', this)">Copiar</button>
+    </div>
+
+    <div class="cuenta">
+      <div class="cuenta-left">
+        <div style="width:52px;height:32px;border-radius:6px;background:#e8f0ea;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#1b5e20;">CNT</div>
+        <div><div class="banco-nombre">Banco Continental</div><div class="banco-tipo">Cuenta corriente</div></div>
+      </div>
+      <div class="cuenta-num">4900 140 92 901</div>
+      <button class="btn-copy" onclick="copiar('4900 140 92 901', this)">Copiar</button>
+    </div>
+
+    <div class="cuenta">
+      <div class="cuenta-left">
+        <div style="width:52px;height:32px;border-radius:6px;background:#e8f5e8;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#2e7d32;">UNO</div>
+        <div><div class="banco-nombre">Ueno Bank</div><div class="banco-tipo">Cuenta de ahorro</div></div>
+      </div>
+      <div class="cuenta-num">184 28 710</div>
+      <button class="btn-copy" onclick="copiar('184 28 710', this)">Copiar</button>
+    </div>
+
+    <div class="cuenta">
+      <div class="cuenta-left">
+        <div style="width:52px;height:32px;border-radius:6px;background:#fff0e8;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#e65100;">ITÁ</div>
+        <div><div class="banco-nombre">Itaú Paraguay</div><div class="banco-tipo">Cuenta corriente</div></div>
+      </div>
+      <div class="cuenta-num">500 504 553</div>
+      <button class="btn-copy" onclick="copiar('500 504 553', this)">Copiar</button>
+    </div>
+  </div>
+
+  <!-- PASOS -->
+  <div class="pasos">
+    <div class="paso">
+      <div class="paso-num">1</div>
+      <div class="paso-titulo">Transferís</div>
+      <div class="paso-desc">Copiás el número de cuenta de tu banco y hacés la transferencia por el monto exacto</div>
+    </div>
+    <div class="paso">
+      <div class="paso-num">2</div>
+      <div class="paso-titulo">Enviás comprobante</div>
+      <div class="paso-desc">Mandás la captura del comprobante por WhatsApp junto con el nombre de tu clínica</div>
+    </div>
+    <div class="paso">
+      <div class="paso-num">3</div>
+      <div class="paso-titulo">Activamos en minutos</div>
+      <div class="paso-desc">En menos de 30 minutos tu acceso queda activo y podés empezar a usar VetOS</div>
+    </div>
+  </div>
+
+  <!-- BOTÓN WHATSAPP -->
+  <a class="btn-wa" id="btnWa" href="#" target="_blank">
+    <span class="btn-wa-ico">💬</span>
+    <span id="btnWaTxt">Enviar comprobante por WhatsApp</span>
+  </a>
+  <div class="nota">
+    Horario de activación: lunes a sábado de 8:00 a 20:00 hs · Asunción, Paraguay<br>
+    ¿Dudas? Escribinos directo al WhatsApp
+  </div>
+
+</div>
+
+<script>
+const WA_NUM = '595982271941'; // ← Cambiá por tu número real
+const PLANES = {
+  1: { nom: 'Básico', precio: 180000 },
+  2: { nom: 'Pro', precio: 280000 },
+  3: { nom: 'Premium', precio: 420000 }
+};
+let planSel = 2;
+
+const fmt = n => new Intl.NumberFormat('es-PY').format(n);
+
+function selPlan(n) {
+  planSel = n;
+  document.querySelectorAll('.plan').forEach(p => p.classList.remove('sel'));
+  document.getElementById('p'+n).classList.add('sel');
+  actualizar();
+}
+
+function actualizar() {
+  const p = PLANES[planSel];
+  const clinica = document.getElementById('fClinica').value || '—';
+  const email = document.getElementById('fEmail').value || '';
+  const wa = document.getElementById('fWa').value || '';
+  const nombre = document.getElementById('fNombre').value || '';
+
+  document.getElementById('rPlan').textContent = p.nom;
+  document.getElementById('rClinica').textContent = clinica;
+  document.getElementById('rTotal').textContent = '₲ ' + fmt(p.precio);
+
+  // Mensaje WhatsApp
+  const msg = `Hola! Quiero activar *VetOS* 🐾
+
+*Plan:* ${p.nom} — ₲ ${fmt(p.precio)}/mes
+*Clínica:* ${clinica}
+*Nombre:* ${nombre}
+*Email:* ${email}
+*WhatsApp:* ${wa}
+
+Adjunto el comprobante de transferencia. ¡Gracias!`;
+
+  document.getElementById('btnWa').href = `https://wa.me/${WA_NUM}?text=${encodeURIComponent(msg)}`;
+
+  if(clinica !== '—' && email) {
+    document.getElementById('btnWaTxt').textContent = `Enviar comprobante — Plan ${p.nom} ₲ ${fmt(p.precio)}`;
+  } else {
+    document.getElementById('btnWaTxt').textContent = 'Enviar comprobante por WhatsApp';
+  }
+}
+
+function copiar(texto, btn) {
+  navigator.clipboard.writeText(texto.replace(/\s/g,'')).then(() => {
+    btn.textContent = '✓ Copiado';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copiar'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
+// Init
+actualizar();
+</script>
+</body>
+</html>
