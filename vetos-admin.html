@@ -364,7 +364,7 @@ async function guardarLic() {
   if(!nom){toast('Ingresá el nombre','err');return;}
   const btn=document.getElementById('btnGuardarLic');
   btn.innerHTML='<span class="spin"></span>';btn.disabled=true;
-  const data={clinica:nom,email:document.getElementById('lEmail').value,whatsapp:document.getElementById('lWa').value,plan:document.getElementById('lPlan').value,vencimiento:document.getElementById('lVenc').value,notas:document.getElementById('lNota').value,activo:estadoToggle};
+  const data={clinica:nom,email:document.getElementById('lEmail').value.toLowerCase().trim(),whatsapp:document.getElementById('lWa').value,plan:document.getElementById('lPlan').value,vencimiento:document.getElementById('lVenc').value,notas:document.getElementById('lNota').value,activo:estadoToggle};
   try {
     if(editId) {
       await sbA(`licencias?id=eq.${editId}`,'PATCH',data);
