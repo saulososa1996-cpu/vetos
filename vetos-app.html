@@ -34,6 +34,18 @@ html,body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text
 .btn-ln:hover{background:var(--green-l);transform:translateY(-1px);box-shadow:0 6px 20px rgba(24,145,110,.3);}
 .ln-hint{text-align:center;font-size:12px;color:var(--muted);margin-top:16px;}
 .ln-err{background:var(--red-bg);border:1px solid rgba(192,57,43,.2);border-radius:8px;padding:10px 14px;font-size:13px;color:var(--red);margin-top:12px;display:none;}
+/* LICENCIA VENCIDA */
+#licBlock{position:fixed;inset:0;background:var(--bg);display:none;align-items:center;justify-content:center;padding:20px;z-index:1001;}
+.lic-wrap{background:var(--white);border:1.5px solid rgba(192,57,43,.2);border-radius:20px;padding:48px 40px;max-width:440px;width:100%;text-align:center;box-shadow:var(--shadow-lg);}
+.lic-ico{font-size:52px;margin-bottom:20px;}
+.lic-title{font-family:'Playfair Display',serif;font-size:26px;font-weight:900;color:var(--red);margin-bottom:12px;}
+.lic-sub{font-size:14px;color:var(--text2);line-height:1.7;margin-bottom:28px;}
+.lic-clinica{font-size:13px;font-weight:700;color:var(--muted);margin-bottom:24px;}
+.btn-lic{display:inline-flex;align-items:center;gap:10px;background:#25d366;color:white;padding:14px 28px;border-radius:10px;text-decoration:none;font-size:14px;font-weight:700;transition:all .2s;}
+.btn-lic:hover{background:#22c45d;transform:translateY(-1px);}
+/* BANNER AVISO */
+.lic-banner{background:var(--amber-bg);border-bottom:1px solid rgba(199,124,26,.3);padding:10px 28px;display:flex;align-items:center;justify-content:space-between;font-size:13px;color:var(--amber);font-weight:500;}
+.lic-banner strong{font-weight:700;}
 #app{display:none;height:100vh;flex-direction:row;}
 .sb{width:var(--sb);min-width:var(--sb);background:var(--white);border-right:1px solid var(--border);display:flex;flex-direction:column;height:100vh;overflow-y:auto;transition:transform .3s;}
 .sb-logo{padding:22px 20px 16px;font-family:'Playfair Display',serif;font-size:28px;font-weight:900;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
@@ -165,6 +177,16 @@ tbody tr:hover td{background:var(--green-bg)!important;}
     </div>
   </div>
 </div>
+<!-- LICENCIA BLOQUEADA -->
+<div id="licBlock">
+  <div class="lic-wrap">
+    <div class="lic-ico">🔒</div>
+    <div class="lic-title">Suscripción vencida</div>
+    <div class="lic-clinica" id="licClinica"></div>
+    <div class="lic-sub">Tu período de acceso a VetOS ha finalizado. Contactanos para renovar y seguir gestionando tu clínica.</div>
+    <a class="btn-lic" id="licWaBtn" href="#" target="_blank">💬 Renovar por WhatsApp</a>
+  </div>
+</div>
 <div class="ov" id="ov" onclick="closeSb()"></div>
 <div id="app">
   <aside class="sb" id="sb">
@@ -188,6 +210,10 @@ tbody tr:hover td{background:var(--green-bg)!important;}
     </div>
   </aside>
   <div class="main">
+    <div class="lic-banner" id="licBanner" style="display:none;">
+      ⚠ <span id="licBannerTxt"></span>
+      <a id="licBannerBtn" href="#" target="_blank" style="font-weight:700;color:var(--amber);text-decoration:underline;">Renovar →</a>
+    </div>
     <div class="topbar">
       <div class="tb-l"><button class="hbg" onclick="toggleSb()">☰</button><div class="tb-title" id="tbTitle">Dashboard</div></div>
       <div class="tb-r"><div class="tb-date" id="tbDate"></div><button class="btn btn-p btn-sm" id="tbBtn" onclick="tbAct()">+ Nuevo turno</button></div>
@@ -332,6 +358,39 @@ async function cargarTodo() {
   }
 }
 
+// ── LICENCIA ──
+let LIC = null;
+const WA_ADMIN = '595981000000'; // <-- Tu número de WhatsApp para renovaciones
+
+async function verificarLicencia(clinicaId) {
+  try {
+    // En producción real: filtrar por ID de clínica. Demo: traer la primera activa.
+    const rows = await sb('licencias','GET',null,`?id=eq.${clinicaId}&select=*`);
+    if(!rows || rows.length===0) return null;
+    return rows[0];
+  } catch(e) { console.error(e); return null; }
+}
+
+function mostrarBloqueo(clinica) {
+  document.getElementById('licClinica').textContent = clinica || '';
+  const msg = encodeURIComponent(`Hola! Necesito renovar mi suscripción a VetOS para la clínica *${clinica}*. ¿Pueden ayudarme?`);
+  document.getElementById('licWaBtn').href = `https://wa.me/${WA_ADMIN}?text=${msg}`;
+  document.getElementById('licBlock').style.display='flex';
+}
+
+function mostrarBanner(diasRestantes, clinica) {
+  if(diasRestantes > 7) return;
+  const banner = document.getElementById('licBanner');
+  const txt = document.getElementById('licBannerTxt');
+  const btn = document.getElementById('licBannerBtn');
+  txt.innerHTML = diasRestantes <= 0
+    ? `<strong>Tu licencia venció.</strong> El sistema está en modo solo lectura.`
+    : `<strong>Tu licencia vence en ${diasRestantes} día${diasRestantes!==1?'s':''}.</strong> Renovar para no perder el acceso.`;
+  const msg = encodeURIComponent(`Hola! Quiero renovar mi suscripción a VetOS para *${clinica}*. Quedan ${diasRestantes} días.`);
+  btn.href = `https://wa.me/${WA_ADMIN}?text=${msg}`;
+  banner.style.display='flex';
+}
+
 // ── INIT ──
 window.addEventListener('load', async () => {
   document.getElementById('tbDate').textContent = new Date().toLocaleDateString('es-PY',{weekday:'long',day:'numeric',month:'long'});
@@ -346,21 +405,56 @@ window.addEventListener('load', async () => {
 });
 
 // ── LOGIN / LOGOUT ──
-function doLogin() {
+async function doLogin() {
   const u=document.getElementById('lu').value.trim(), p=document.getElementById('lp').value, btn=document.getElementById('btnLn');
   if(!u||!p){document.getElementById('lnErr').textContent='Completá usuario y contraseña';document.getElementById('lnErr').style.display='block';return;}
-  btn.textContent='Ingresando...';btn.disabled=true;
-  setTimeout(()=>{
+  btn.innerHTML='<span class="spin"></span> Verificando...';btn.disabled=true;
+
+  // Buscar licencia por email/usuario
+  try {
+    const rows = await sb('licencias','GET',null,`?email=eq.${encodeURIComponent(u)}&select=*`);
+    // Demo fallback: si no encuentra por email, usar la primera licencia (modo demo)
+    const lic = (rows && rows.length>0) ? rows[0] : (await sb('licencias','GET',null,'?order=created_at&limit=1'))[0];
+    LIC = lic;
+
+    if(!lic || !lic.activo) {
+      btn.textContent='Ingresar al sistema →';btn.disabled=false;
+      document.getElementById('loginScreen').style.display='none';
+      mostrarBloqueo(lic?.clinica || 'Tu clínica');
+      return;
+    }
+
+    const diasRest = Math.ceil((new Date(lic.vencimiento)-new Date())/86400000);
+    if(diasRest < 0) {
+      btn.textContent='Ingresar al sistema →';btn.disabled=false;
+      document.getElementById('loginScreen').style.display='none';
+      mostrarBloqueo(lic.clinica);
+      return;
+    }
+
+    // Licencia OK → entrar
+    btn.textContent='Ingresar al sistema →';btn.disabled=false;
+    document.getElementById('lnErr').style.display='none';
+    document.getElementById('loginScreen').style.display='none';
+    document.getElementById('app').style.display='flex';
+    D.cfg.cn = lic.clinica || D.cfg.cn;
+    document.getElementById('cnName').textContent=D.cfg.cn;
+    // Plan pill
+    document.querySelector('.cp').textContent=`Plan ${lic.plan?.charAt(0).toUpperCase()+lic.plan?.slice(1)||'Pro'} · Activo`;
+    mostrarBanner(diasRest, lic.clinica);
+    g('dashboard');
+  } catch(e) {
+    // Si falla la verificación, entrar igual (no bloquear por error de red)
     btn.textContent='Ingresar al sistema →';btn.disabled=false;
     document.getElementById('lnErr').style.display='none';
     document.getElementById('loginScreen').style.display='none';
     document.getElementById('app').style.display='flex';
     document.getElementById('cnName').textContent=D.cfg.cn;
     g('dashboard');
-  },600);
+  }
 }
 document.addEventListener('keydown',e=>{if(e.key==='Enter'&&document.getElementById('loginScreen').style.display==='flex')doLogin();});
-function doLogout(){if(!confirm('¿Cerrar sesión?'))return;document.getElementById('app').style.display='none';document.getElementById('loginScreen').style.display='flex';document.getElementById('lp').value='';}
+function doLogout(){if(!confirm('¿Cerrar sesión?'))return;document.getElementById('app').style.display='none';document.getElementById('licBlock').style.display='none';document.getElementById('loginScreen').style.display='flex';document.getElementById('lp').value='';LIC=null;}
 
 // ── NAVEGACIÓN ──
 function g(sec) {
