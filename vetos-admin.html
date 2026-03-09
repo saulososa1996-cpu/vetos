@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VetOS Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f5f4f0;--bg2:#eeede8;--white:#fff;--border:#e4e2db;--border2:#ccc9c0;--green:#18916e;--green-l:#1db88c;--green-bg:#f0faf6;--green-dim:rgba(24,145,110,.1);--amber:#c77c1a;--amber-bg:#fef9ee;--red:#c0392b;--red-bg:#fef2f1;--blue:#2d5be3;--blue-bg:#eff3ff;--text:#18170f;--text2:#4a4840;--muted:#9a978e;--shadow:0 1px 4px rgba(0,0,0,.06);--shadow-md:0 4px 20px rgba(0,0,0,.08);--shadow-lg:0 16px 48px rgba(0,0,0,.1);--r:14px;}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100%;-webkit-font-smoothing:antialiased;font-size:14px;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px;}
+
+/* LOGIN */
+#loginWrap{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:999;padding:20px;}
+.ln-card{background:var(--white);border:1px solid var(--border);border-radius:20px;padding:40px;width:100%;max-width:400px;box-shadow:var(--shadow-lg);animation:fadeUp .4s both;}
+.ln-brand{font-family:'Playfair Display',serif;font-size:36px;font-weight:900;text-align:center;margin-bottom:4px;}
+.ln-brand em{color:var(--green);font-style:italic;}
+.ln-sub{text-align:center;color:var(--muted);font-size:12px;margin-bottom:32px;}
+.fl{font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.9px;margin-bottom:7px;display:block;}
+.fi{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:10px;padding:13px 14px;color:var(--text);font-size:14px;font-family:'DM Sans',sans-serif;outline:none;transition:border-color .15s;margin-bottom:14px;}
+.fi:focus{border-color:var(--green);box-shadow:0 0 0 3px var(--green-dim);}
+.btn-ln{width:100%;background:var(--green);color:white;border:none;border-radius:10px;padding:14px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:all .2s;}
+.btn-ln:hover{background:var(--green-l);}
+.ln-err{background:var(--red-bg);border:1px solid rgba(192,57,43,.2);border-radius:8px;padding:10px 14px;font-size:13px;color:var(--red);margin-top:10px;display:none;}
+
+/* APP */
+#adminApp{display:none;}
+.topbar{background:var(--white);border-bottom:1px solid var(--border);padding:14px 32px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;}
+.tb-brand{font-family:'Playfair Display',serif;font-size:22px;font-weight:900;}
+.tb-brand em{color:var(--green);font-style:italic;}
+.tb-badge{font-size:10px;font-weight:700;background:var(--red-bg);color:var(--red);border:1px solid rgba(192,57,43,.2);padding:2px 8px;border-radius:20px;margin-left:8px;letter-spacing:.5px;}
+.tb-r{display:flex;align-items:center;gap:12px;}
+.content{max-width:1100px;margin:0 auto;padding:32px 24px;}
+
+/* STATS */
+.sg{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px;}
+.sc{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:22px;box-shadow:var(--shadow);}
+.sc-val{font-family:'Playfair Display',serif;font-size:36px;font-weight:900;letter-spacing:-1px;}
+.sc-lbl{font-size:12px;color:var(--muted);font-weight:500;margin-top:4px;}
+.sc-sub{font-size:11px;font-weight:700;margin-top:8px;}
+
+/* PANEL */
+.panel{background:var(--white);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden;margin-bottom:24px;}
+.ph{padding:16px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.pt{font-size:13px;font-weight:700;}
+
+/* TABLE */
+.tw{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;}
+thead tr{border-bottom:2px solid var(--border);}
+th{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.9px;padding:11px 16px;text-align:left;white-space:nowrap;}
+td{padding:14px 16px;border-bottom:1px solid var(--border);font-size:13px;color:var(--text2);vertical-align:middle;}
+tbody tr:last-child td{border-bottom:none;}
+tbody tr:nth-child(even) td{background:rgba(238,237,232,.4);}
+tbody tr:hover td{background:var(--green-bg)!important;}
+.tb2{color:var(--text);font-weight:600;}
+
+/* BADGES */
+.badge{font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;display:inline-flex;align-items:center;gap:4px;white-space:nowrap;}
+.bg-g{background:var(--green-bg);color:var(--green);}
+.bg-a{background:var(--amber-bg);color:var(--amber);}
+.bg-r{background:var(--red-bg);color:var(--red);}
+.bg-b{background:var(--blue-bg);color:var(--blue);}
+.bg-x{background:var(--bg2);color:var(--muted);}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:7px;padding:9px 18px;border-radius:9px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all .15s;}
+.btn-sm{padding:6px 12px;font-size:12px;}
+.btn-p{background:var(--green);color:white;}.btn-p:hover{background:var(--green-l);}
+.btn-g{background:var(--white);color:var(--text2);border:1.5px solid var(--border);}.btn-g:hover{border-color:var(--border2);}
+.btn-r{background:var(--red-bg);color:var(--red);border:1.5px solid rgba(192,57,43,.2);}.btn-r:hover{background:var(--red);color:white;}
+.ic{width:30px;height:30px;border-radius:7px;background:var(--bg);border:1.5px solid var(--border);cursor:pointer;color:var(--muted);transition:all .12s;font-size:12px;display:inline-flex;align-items:center;justify-content:center;}
+.ic:hover{border-color:var(--green);color:var(--green);background:var(--green-bg);}
+.ic.r:hover{border-color:var(--red);color:var(--red);background:var(--red-bg);}
+
+/* MODAL */
+.mo{position:fixed;inset:0;background:rgba(10,10,8,.45);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;z-index:500;padding:20px;}
+.mo.open{display:flex;}
+.md{background:var(--white);border-radius:18px;width:100%;max-width:480px;box-shadow:var(--shadow-lg);animation:fadeUp .2s both;}
+.mh{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.mt2{font-family:'Playfair Display',serif;font-size:20px;font-weight:700;}
+.mx{width:30px;height:30px;border-radius:8px;background:var(--bg);border:1.5px solid var(--border);cursor:pointer;font-size:13px;color:var(--muted);display:flex;align-items:center;justify-content:center;}
+.mx:hover{background:var(--red-bg);color:var(--red);}
+.mb{padding:24px;}
+.mf{padding:16px 24px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px;}
+.fd{margin-bottom:14px;}
+.fdl{font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.9px;margin-bottom:6px;display:block;}
+.fdi,.fds{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:10px;padding:11px 13px;color:var(--text);font-size:13px;font-family:'DM Sans',sans-serif;outline:none;transition:border-color .15s;}
+.fdi:focus,.fds:focus{border-color:var(--green);box-shadow:0 0 0 3px var(--green-dim);}
+.fr{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.toggle-wrap{display:flex;align-items:center;gap:12px;}
+.toggle{width:44px;height:24px;border-radius:12px;background:var(--border2);cursor:pointer;position:relative;transition:background .2s;border:none;}
+.toggle.on{background:var(--green);}
+.toggle::after{content:'';position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:white;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.2);}
+.toggle.on::after{left:23px;}
+.toggle-lbl{font-size:13px;font-weight:600;}
+
+/* TOAST */
+.toast{position:fixed;bottom:28px;right:28px;background:var(--text);color:white;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:600;z-index:9999;animation:fadeUp .3s both;box-shadow:var(--shadow-lg);}
+.toast.ok{background:var(--green);}.toast.err{background:var(--red);}
+.spin{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:white;border-radius:50%;animation:spin .6s linear infinite;}
+
+@media(max-width:768px){.sg{grid-template-columns:repeat(2,1fr);}.content{padding:16px;}.fr{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+
+<!-- LOGIN ADMIN -->
+<div id="loginWrap">
+  <div class="ln-card">
+    <div class="ln-brand">Vet<em>OS</em></div>
+    <div class="ln-sub">Panel de Administración</div>
+    <label class="fl">Contraseña de admin</label>
+    <input class="fi" id="adminPass" type="password" placeholder="••••••••" autocomplete="current-password">
+    <button class="btn-ln" id="btnAdminLn" onclick="adminLogin()">Ingresar →</button>
+    <div class="ln-err" id="adminErr">Contraseña incorrecta</div>
+  </div>
+</div>
+
+<!-- APP ADMIN -->
+<div id="adminApp">
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:8px;">
+      <div class="tb-brand">Vet<em>OS</em></div>
+      <span class="tb-badge">ADMIN</span>
+    </div>
+    <div class="tb-r">
+      <span style="font-size:12px;color:var(--muted)" id="adminFecha"></span>
+      <button class="btn btn-g btn-sm" onclick="cargar()">↺ Actualizar</button>
+      <button class="btn btn-r btn-sm" onclick="adminLogout()">Salir</button>
+    </div>
+  </div>
+
+  <div class="content">
+    <!-- STATS -->
+    <div class="sg" id="statsGrid">
+      <div class="sc"><div class="sc-val" id="stTotal">—</div><div class="sc-lbl">Clientes totales</div></div>
+      <div class="sc"><div class="sc-val" style="color:var(--green)" id="stActivos">—</div><div class="sc-lbl">Activos</div><div class="sc-sub" style="color:var(--green)" id="stMrr">₲ 0 / mes</div></div>
+      <div class="sc"><div class="sc-val" style="color:var(--amber)" id="stPorVencer">—</div><div class="sc-lbl">Por vencer (7 días)</div></div>
+      <div class="sc"><div class="sc-val" style="color:var(--red)" id="stVencidos">—</div><div class="sc-lbl">Vencidos / Inactivos</div></div>
+    </div>
+
+    <!-- TABLA LICENCIAS -->
+    <div class="panel">
+      <div class="ph">
+        <div class="pt">🔑 Licencias</div>
+        <button class="btn btn-p btn-sm" onclick="abrirNuevo()">+ Nueva licencia</button>
+      </div>
+      <div class="tw">
+        <table>
+          <thead><tr><th>Clínica</th><th>Email</th><th>WhatsApp</th><th>Plan</th><th>Vencimiento</th><th>Días</th><th>Estado</th><th>Acciones</th></tr></thead>
+          <tbody id="tbLic"><tr><td colspan="8" style="text-align:center;padding:40px;color:var(--muted)">Cargando...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NUEVA/EDITAR LICENCIA -->
+<div class="mo" id="moLic">
+  <div class="md">
+    <div class="mh"><div class="mt2" id="moLicTitle">Nueva Licencia</div><button class="mx" onclick="cerrarMo()">✕</button></div>
+    <div class="mb">
+      <div class="fd"><label class="fdl">Nombre de la clínica</label><input class="fdi" id="lNom" placeholder="Clínica Veterinaria San Blas"></div>
+      <div class="fr">
+        <div class="fd"><label class="fdl">Email / Usuario</label><input class="fdi" id="lEmail" type="email" placeholder="vet@clinica.com"></div>
+        <div class="fd"><label class="fdl">WhatsApp</label><input class="fdi" id="lWa" placeholder="0981 000 000"></div>
+      </div>
+      <div class="fr">
+        <div class="fd"><label class="fdl">Plan</label>
+          <select class="fds" id="lPlan">
+            <option value="basico">Básico — ₲180.000</option>
+            <option value="pro" selected>Pro — ₲280.000</option>
+            <option value="premium">Premium — ₲420.000</option>
+          </select>
+        </div>
+        <div class="fd"><label class="fdl">Vencimiento</label><input class="fdi" id="lVenc" type="date"></div>
+      </div>
+      <div class="fd"><label class="fdl">Notas</label><input class="fdi" id="lNota" placeholder="Referido por, observaciones..."></div>
+      <div class="fd">
+        <label class="fdl">Estado</label>
+        <div class="toggle-wrap">
+          <button class="toggle on" id="toggleActivo" onclick="toggleA()"></button>
+          <span class="toggle-lbl" id="toggleLbl">Activo</span>
+        </div>
+      </div>
+    </div>
+    <div class="mf">
+      <button class="btn btn-g" onclick="cerrarMo()">Cancelar</button>
+      <button class="btn btn-p" id="btnGuardarLic" onclick="guardarLic()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── CONFIG ──
+const SB_URL = 'https://mlovytmwbvppdmuccotj.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1sb3Z5dG13YnZwcGRtdWNjb3RqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMwNzE0NjAsImV4cCI6MjA4ODY0NzQ2MH0.b369eKmOnsJ5B2TGy3jTHbY82J8SPXt75xEKosZ2sCY';
+const ADMIN_PASS = 'vetos2026'; // ← Cambiá esto por tu contraseña
+
+const PRECIOS = { basico: 180000, pro: 280000, premium: 420000 };
+
+async function sbA(table, method='GET', body=null, filters='') {
+  const url = `${SB_URL}/rest/v1/${table}${filters}`;
+  const headers = { 'apikey': SB_KEY, 'Authorization': `Bearer ${SB_KEY}`, 'Content-Type': 'application/json', 'Prefer': method==='POST'?'return=representation':'' };
+  const res = await fetch(url, { method, headers, body: body ? JSON.stringify(body) : null });
+  if (!res.ok) throw new Error(await res.text());
+  if (method==='DELETE'||res.status===204) return true;
+  return res.json();
+}
+
+function toast(msg, type='ok') {
+  const t=document.createElement('div');t.className=`toast ${type}`;t.textContent=msg;
+  document.body.appendChild(t);setTimeout(()=>t.remove(),3000);
+}
+
+const diasA = f => Math.ceil((new Date(f)-new Date())/86400000);
+const fmtG = n => new Intl.NumberFormat('es-PY').format(n||0);
+
+// ── LOGIN ──
+document.addEventListener('keydown', e=>{if(e.key==='Enter'&&document.getElementById('loginWrap').style.display!=='none')adminLogin();});
+function adminLogin() {
+  const p = document.getElementById('adminPass').value;
+  if(p !== ADMIN_PASS) { document.getElementById('adminErr').style.display='block'; return; }
+  document.getElementById('loginWrap').style.display='none';
+  document.getElementById('adminApp').style.display='block';
+  document.getElementById('adminFecha').textContent = new Date().toLocaleDateString('es-PY',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  cargar();
+}
+function adminLogout() { location.reload(); }
+
+// ── DATOS ──
+let LICS = [];
+
+async function cargar() {
+  try {
+    LICS = await sbA('licencias','GET',null,'?order=created_at.desc');
+    renderStats();
+    renderTabla();
+  } catch(e) { toast('Error al cargar','err'); console.error(e); }
+}
+
+function renderStats() {
+  const hoy = new Date();
+  const activos = LICS.filter(l=>l.activo && diasA(l.vencimiento)>=0);
+  const porVencer = LICS.filter(l=>l.activo && diasA(l.vencimiento)>=0 && diasA(l.vencimiento)<=7);
+  const vencidos = LICS.filter(l=>!l.activo || diasA(l.vencimiento)<0);
+  const mrr = activos.reduce((a,l)=>a+(PRECIOS[l.plan]||0),0);
+  document.getElementById('stTotal').textContent = LICS.length;
+  document.getElementById('stActivos').textContent = activos.length;
+  document.getElementById('stMrr').textContent = '₲ '+fmtG(mrr)+' / mes';
+  document.getElementById('stPorVencer').textContent = porVencer.length;
+  document.getElementById('stVencidos').textContent = vencidos.length;
+}
+
+function renderTabla() {
+  const tbody = document.getElementById('tbLic');
+  if(LICS.length===0){tbody.innerHTML='<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--muted)">No hay licencias</td></tr>';return;}
+  tbody.innerHTML = LICS.map(l=>{
+    const d = diasA(l.vencimiento);
+    const activo = l.activo && d >= 0;
+    const badge = !l.activo ? '<span class="badge bg-x">Inactivo</span>'
+      : d < 0 ? '<span class="badge bg-r">Vencido</span>'
+      : d <= 7 ? `<span class="badge bg-a">⚠ Por vencer</span>`
+      : '<span class="badge bg-g">✓ Activo</span>';
+    const diasTxt = d < 0 ? `<span style="color:var(--red);font-weight:700">${d}d</span>` : d <= 7 ? `<span style="color:var(--amber);font-weight:700">${d}d</span>` : `<span style="color:var(--green);font-weight:600">${d}d</span>`;
+    const waNum = (l.whatsapp||'').replace(/\D/g,'');
+    const waMsg = encodeURIComponent(`Hola ${l.clinica}! Te contactamos de VetOS. Tu suscripción ${d<0?'venció':'vence en '+d+' días'}. ¿Querés renovar?`);
+    return `<tr>
+      <td class="tb2">${l.clinica}</td>
+      <td style="color:var(--muted)">${l.email||'—'}</td>
+      <td>${l.whatsapp||'—'}</td>
+      <td><span class="badge bg-b">${l.plan||'pro'}</span></td>
+      <td>${l.vencimiento}</td>
+      <td>${diasTxt}</td>
+      <td>${badge}</td>
+      <td>
+        <div style="display:flex;gap:6px;">
+          ${waNum?`<a class="ic" href="https://wa.me/595${waNum}?text=${waMsg}" target="_blank" title="WhatsApp">💬</a>`:''}
+          <button class="ic" onclick="editarLic('${l.id}')" title="Editar">✏️</button>
+          <button class="ic" onclick="toggleLic('${l.id}',${l.activo})" title="${l.activo?'Desactivar':'Activar'}">${l.activo?'🔴':'🟢'}</button>
+          <button class="ic r" onclick="renovar('${l.id}')" title="Renovar +30 días">+30d</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+// ── ACCIONES ──
+async function toggleLic(id, actual) {
+  const accion = actual ? 'desactivar' : 'activar';
+  if(!confirm(`¿${accion.charAt(0).toUpperCase()+accion.slice(1)} esta licencia?`)) return;
+  try {
+    await sbA(`licencias?id=eq.${id}`,'PATCH',{activo:!actual});
+    const l = LICS.find(x=>x.id===id); if(l) l.activo=!actual;
+    renderStats(); renderTabla();
+    toast(`Licencia ${accion}da`);
+  } catch(e){toast('Error','err');}
+}
+
+async function renovar(id) {
+  const l = LICS.find(x=>x.id===id);
+  if(!l) return;
+  const base = new Date(l.vencimiento) > new Date() ? new Date(l.vencimiento) : new Date();
+  base.setDate(base.getDate()+30);
+  const nuevaFecha = base.toISOString().slice(0,10);
+  if(!confirm(`¿Renovar 30 días? Nuevo vencimiento: ${nuevaFecha}`)) return;
+  try {
+    await sbA(`licencias?id=eq.${id}`,'PATCH',{vencimiento:nuevaFecha,activo:true});
+    l.vencimiento=nuevaFecha;l.activo=true;
+    renderStats();renderTabla();
+    toast('✓ Renovada hasta '+nuevaFecha);
+  } catch(e){toast('Error','err');}
+}
+
+// ── MODAL ──
+let editId = null;
+let estadoToggle = true;
+
+function abrirNuevo() {
+  editId=null;
+  document.getElementById('moLicTitle').textContent='Nueva Licencia';
+  document.getElementById('lNom').value='';
+  document.getElementById('lEmail').value='';
+  document.getElementById('lWa').value='';
+  document.getElementById('lPlan').value='pro';
+  // Vencimiento: 30 días desde hoy
+  const f=new Date();f.setDate(f.getDate()+30);
+  document.getElementById('lVenc').value=f.toISOString().slice(0,10);
+  document.getElementById('lNota').value='';
+  estadoToggle=true;actualizarToggle();
+  document.getElementById('moLic').classList.add('open');
+}
+
+function editarLic(id) {
+  const l=LICS.find(x=>x.id===id);if(!l)return;
+  editId=id;
+  document.getElementById('moLicTitle').textContent='Editar Licencia';
+  document.getElementById('lNom').value=l.clinica||'';
+  document.getElementById('lEmail').value=l.email||'';
+  document.getElementById('lWa').value=l.whatsapp||'';
+  document.getElementById('lPlan').value=l.plan||'pro';
+  document.getElementById('lVenc').value=l.vencimiento||'';
+  document.getElementById('lNota').value=l.notas||'';
+  estadoToggle=l.activo;actualizarToggle();
+  document.getElementById('moLic').classList.add('open');
+}
+
+function toggleA(){estadoToggle=!estadoToggle;actualizarToggle();}
+function actualizarToggle(){
+  const t=document.getElementById('toggleActivo');
+  const l=document.getElementById('toggleLbl');
+  t.className='toggle'+(estadoToggle?' on':'');
+  l.textContent=estadoToggle?'Activo':'Inactivo';
+}
+
+function cerrarMo(){document.getElementById('moLic').classList.remove('open');}
+
+async function guardarLic() {
+  const nom=document.getElementById('lNom').value.trim();
+  if(!nom){toast('Ingresá el nombre','err');return;}
+  const btn=document.getElementById('btnGuardarLic');
+  btn.innerHTML='<span class="spin"></span>';btn.disabled=true;
+  const data={clinica:nom,email:document.getElementById('lEmail').value,whatsapp:document.getElementById('lWa').value,plan:document.getElementById('lPlan').value,vencimiento:document.getElementById('lVenc').value,notas:document.getElementById('lNota').value,activo:estadoToggle};
+  try {
+    if(editId) {
+      await sbA(`licencias?id=eq.${editId}`,'PATCH',data);
+      const idx=LICS.findIndex(x=>x.id===editId);
+      if(idx>=0)LICS[idx]={...LICS[idx],...data};
+      toast('✓ Licencia actualizada');
+    } else {
+      const rows=await sbA('licencias','POST',data);
+      LICS.unshift(rows[0]);
+      toast('✓ Licencia creada');
+    }
+    renderStats();renderTabla();cerrarMo();
+  } catch(e){toast('Error al guardar','err');console.error(e);}
+  btn.innerHTML='Guardar';btn.disabled=false;
+}
+
+document.getElementById('moLic').addEventListener('click',e=>{if(e.target===document.getElementById('moLic'))cerrarMo();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')cerrarMo();});
+</script>
+</body>
+</html>
