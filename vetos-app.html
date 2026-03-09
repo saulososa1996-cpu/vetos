@@ -2,1571 +2,520 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="theme-color" content="#080c0a">
-<title>VetOS · Panel de Control</title>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VetOS</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
-:root{
-  --noir:#080c0a; --deep:#0d1410; --card:#111a14; --card2:#162019;
-  --border:#1e3024; --border2:#264030;
-  --emerald:#2ecc71; --emerald-l:#4eda87; --emerald-d:#1fa355;
-  --emerald-dim:rgba(46,204,113,.1);
-  --rose:#e05c5c; --gold:#c8a96e; --blue:#5c9de0;
-  --text:#e8f2eb; --muted:#6b8c73; --soft:#b0ccb8;
-  --sidebar:260px;
-  --fs-xs:12px; --fs-sm:13px; --fs-base:15px; --fs-md:17px;
-  --fs-lg:20px; --fs-xl:26px; --fs-2xl:34px;
-}
+:root{--bg:#f5f4f0;--bg2:#eeede8;--white:#fff;--border:#e4e2db;--border2:#ccc9c0;--green:#18916e;--green-l:#1db88c;--green-bg:#f0faf6;--green-dim:rgba(24,145,110,.1);--amber:#c77c1a;--amber-bg:#fef9ee;--red:#c0392b;--red-bg:#fef2f1;--blue:#2d5be3;--blue-bg:#eff3ff;--text:#18170f;--text2:#4a4840;--muted:#9a978e;--shadow:0 1px 4px rgba(0,0,0,.06);--shadow-md:0 4px 20px rgba(0,0,0,.08);--shadow-lg:0 16px 48px rgba(0,0,0,.1);--r:14px;--sb:260px;}
 *{margin:0;padding:0;box-sizing:border-box;}
-html,body{
-  font-family:'DM Mono',monospace;
-  background:var(--noir);color:var(--text);
-  height:100%;overflow:hidden;
-  -webkit-font-smoothing:antialiased;
-  font-size:var(--fs-base);
-}
-::-webkit-scrollbar{width:4px;}
-::-webkit-scrollbar-track{background:var(--deep);}
-::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
-
-/* ── LOADER ── */
-#loader{
-  position:fixed;inset:0;background:var(--noir);
-  display:flex;align-items:center;justify-content:center;
-  flex-direction:column;gap:24px;z-index:9999;
-}
-.loader-logo{
-  font-family:'Syne',sans-serif;font-size:48px;font-weight:800;
-  opacity:0;animation:fadeUp .6s .2s forwards;
-}
-.loader-logo em{
-  font-family:'Instrument Serif',serif;font-style:italic;
-  color:var(--emerald);font-weight:400;
-}
-.loader-bar{
-  width:120px;height:2px;background:var(--border);
-  border-radius:2px;overflow:hidden;
-  opacity:0;animation:fadeUp .6s .4s forwards;
-}
-.loader-bar-fill{
-  height:100%;background:var(--emerald);
-  animation:load 1.2s ease forwards;
-}
-@keyframes load{from{width:0}to{width:100%}}
+html,body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);height:100%;overflow:hidden;-webkit-font-smoothing:antialiased;font-size:14px;}
+::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px;}
 @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
-@keyframes fadeIn{from{opacity:0}to{opacity:1}}
-@keyframes slideIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes slideUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes barFill{from{width:0}to{width:100%}}
 
-/* ── LOGIN ── */
-#loginScreen{
-  position:fixed;inset:0;background:var(--noir);
-  display:none;align-items:center;justify-content:center;
-  z-index:1000;
-}
-.login-bg{
-  position:absolute;inset:0;
-  background-image:linear-gradient(var(--border) 1px,transparent 1px),
-    linear-gradient(90deg,var(--border) 1px,transparent 1px);
-  background-size:48px 48px;opacity:.2;
-}
-.login-glow{
-  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
-  width:600px;height:600px;
-  background:radial-gradient(circle,rgba(46,204,113,.06) 0%,transparent 70%);
-}
-.login-box{
-  background:var(--card);border:1px solid var(--border2);
-  border-radius:16px;padding:52px 44px;
-  width:100%;max-width:420px;
-  position:relative;z-index:2;
-  animation:fadeUp .5s both;
-}
-.login-logo{
-  font-family:'Syne',sans-serif;font-size:36px;font-weight:800;
-  text-align:center;margin-bottom:8px;
-}
-.login-logo em{
-  font-family:'Instrument Serif',serif;font-style:italic;
-  color:var(--emerald);font-weight:400;
-}
-.login-sub{
-  text-align:center;font-size:13px;color:var(--muted);
-  margin-bottom:36px;
-}
-.form-group{margin-bottom:16px;}
-.form-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;display:block;}
-.form-input{
-  width:100%;background:var(--deep);border:1px solid var(--border2);
-  border-radius:6px;padding:14px 16px;
-  color:var(--text);font-size:15px;font-family:'DM Mono',monospace;
-  outline:none;transition:border-color .2s;
-}
-.form-input:focus{border-color:var(--emerald);}
-.form-input::placeholder{color:var(--muted);}
-.btn-login{
-  width:100%;background:var(--emerald);color:var(--noir);
-  border:none;border-radius:6px;padding:15px;
-  font-family:'Syne',sans-serif;font-size:15px;font-weight:700;
-  cursor:pointer;letter-spacing:.5px;text-transform:uppercase;
-  transition:all .2s;margin-top:8px;
-}
-.btn-login:hover{background:var(--emerald-l);}
-.login-err{
-  background:rgba(224,92,92,.1);border:1px solid rgba(224,92,92,.3);
-  border-radius:6px;padding:10px 14px;
-  font-size:13px;color:#e05c5c;margin-top:12px;
-  display:none;
-}
+/* LOADER */
+#loader{position:fixed;inset:0;background:var(--white);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:24px;z-index:9999;}
+.ld-logo{font-family:'Playfair Display',serif;font-size:52px;font-weight:900;opacity:0;animation:fadeUp .5s .1s forwards;}
+.ld-logo em{color:var(--green);font-style:normal;}
+.ld-bar{width:80px;height:2px;background:var(--border);border-radius:2px;overflow:hidden;opacity:0;animation:fadeUp .4s .3s forwards;}
+.ld-fill{height:100%;background:var(--green);animation:barFill 1s .4s forwards;}
 
-/* ── APP SHELL ── */
-#appShell{
-  display:none;height:100vh;
-  flex-direction:row;
-  animation:fadeIn .4s;
-}
+/* LOGIN */
+#loginScreen{position:fixed;inset:0;background:var(--bg);display:none;align-items:center;justify-content:center;padding:20px;z-index:1000;}
+.ln-wrap{width:100%;max-width:420px;}
+.ln-brand{font-family:'Playfair Display',serif;font-size:42px;font-weight:900;text-align:center;margin-bottom:4px;}
+.ln-brand em{color:var(--green);font-style:italic;}
+.ln-sub{text-align:center;color:var(--muted);font-size:13px;margin-bottom:36px;}
+.ln-card{background:var(--white);border:1px solid var(--border);border-radius:20px;padding:36px;box-shadow:var(--shadow-lg);}
+.fl{font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.9px;margin-bottom:8px;display:block;}
+.fi{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:10px;padding:14px 16px;color:var(--text);font-size:14px;font-family:'DM Sans',sans-serif;outline:none;transition:border-color .15s,box-shadow .15s;margin-bottom:16px;}
+.fi:focus{border-color:var(--green);box-shadow:0 0 0 3px var(--green-dim);background:var(--white);}
+.fi::placeholder{color:var(--muted);}
+.btn-ln{width:100%;background:var(--green);color:white;border:none;border-radius:10px;padding:15px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:all .2s;margin-top:4px;}
+.btn-ln:hover{background:var(--green-l);transform:translateY(-1px);box-shadow:0 6px 20px rgba(24,145,110,.3);}
+.ln-hint{text-align:center;font-size:12px;color:var(--muted);margin-top:16px;}
+.ln-err{background:var(--red-bg);border:1px solid rgba(192,57,43,.2);border-radius:8px;padding:10px 14px;font-size:13px;color:var(--red);margin-top:12px;display:none;}
 
-/* ── SIDEBAR ── */
-.sidebar{
-  width:var(--sidebar);min-width:var(--sidebar);
-  background:var(--deep);border-right:1px solid var(--border);
-  display:flex;flex-direction:column;height:100vh;
-  overflow-y:auto;
-  transition:transform .3s;
-}
-.sidebar-logo{
-  padding:28px 24px 20px;
-  font-family:'Syne',sans-serif;font-size:24px;font-weight:800;
-  border-bottom:1px solid var(--border);
-}
-.sidebar-logo em{
-  font-family:'Instrument Serif',serif;font-style:italic;
-  color:var(--emerald);font-weight:400;
-}
-.sidebar-clinic{
-  padding:16px 24px;
-  border-bottom:1px solid var(--border);
-}
-.clinic-name{font-size:13px;font-weight:600;color:var(--text);}
-.clinic-plan{
-  font-size:10px;color:var(--emerald);
-  background:var(--emerald-dim);
-  border:1px solid rgba(46,204,113,.2);
-  padding:2px 8px;border-radius:2px;
-  display:inline-block;margin-top:4px;
-  text-transform:uppercase;letter-spacing:.5px;
-}
-.nav-section{padding:20px 16px 8px;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;}
-.nav-item{
-  display:flex;align-items:center;gap:12px;
-  padding:11px 16px;border-radius:6px;margin:2px 8px;
-  cursor:pointer;transition:all .2s;
-  font-size:13px;color:var(--soft);
-  text-decoration:none;
-}
-.nav-item:hover{background:var(--card);color:var(--text);}
-.nav-item.active{
-  background:var(--emerald-dim);color:var(--emerald);
-  border:1px solid rgba(46,204,113,.15);
-}
-.nav-icon{font-size:16px;min-width:20px;text-align:center;}
-.sidebar-bottom{margin-top:auto;padding:16px 8px;border-top:1px solid var(--border);}
-.btn-logout{
-  display:flex;align-items:center;gap:10px;
-  padding:11px 16px;border-radius:6px;
-  cursor:pointer;font-size:13px;color:var(--muted);
-  transition:all .2s;width:100%;
-  background:none;border:none;font-family:'DM Mono',monospace;
-}
-.btn-logout:hover{color:var(--rose);background:rgba(224,92,92,.08);}
+/* APP */
+#app{display:none;height:100vh;flex-direction:row;}
 
-/* ── MAIN ── */
-.main{
-  flex:1;overflow-y:auto;
-  background:var(--noir);
-}
-.topbar{
-  position:sticky;top:0;
-  background:rgba(8,12,10,.95);backdrop-filter:blur(16px);
-  border-bottom:1px solid var(--border);
-  padding:16px 32px;
-  display:flex;align-items:center;justify-content:space-between;
-  z-index:50;
-}
-.topbar-title{
-  font-family:'Syne',sans-serif;font-size:18px;font-weight:700;
-}
-.topbar-right{display:flex;align-items:center;gap:16px;}
-.topbar-date{font-size:12px;color:var(--muted);}
-.topbar-menu{
-  display:none;background:none;border:none;
-  color:var(--text);cursor:pointer;font-size:20px;padding:4px;
-}
-.content{padding:32px;animation:slideIn .4s both;}
+/* SIDEBAR */
+.sb{width:var(--sb);min-width:var(--sb);background:var(--white);border-right:1px solid var(--border);display:flex;flex-direction:column;height:100vh;overflow-y:auto;transition:transform .3s;}
+.sb-logo{padding:22px 20px 16px;font-family:'Playfair Display',serif;font-size:28px;font-weight:900;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+.sb-logo em{color:var(--green);font-style:italic;}
+.logo-pill{font-family:'DM Sans',sans-serif;font-size:9px;font-weight:700;background:var(--green-bg);color:var(--green);border:1px solid rgba(24,145,110,.2);padding:2px 8px;border-radius:20px;letter-spacing:.6px;text-transform:uppercase;margin-top:2px;}
+.sb-clinic{padding:12px 20px;border-bottom:1px solid var(--border);}
+.cn{font-size:13px;font-weight:600;}
+.cp{font-size:11px;color:var(--green);font-weight:500;margin-top:2px;}
+.ns{padding:20px 20px 6px;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;}
+.ni{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:10px;margin:1px 8px;cursor:pointer;transition:all .12s;font-size:13px;font-weight:500;color:var(--text2);text-decoration:none;}
+.ni:hover{background:var(--bg);color:var(--text);}
+.ni.active{background:var(--green-bg);color:var(--green);font-weight:600;}
+.ni-ico{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;background:var(--bg);transition:background .12s;flex-shrink:0;}
+.ni.active .ni-ico{background:var(--green-dim);}
+.sb-foot{margin-top:auto;padding:12px 8px;border-top:1px solid var(--border);}
+.btn-out{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:10px;cursor:pointer;font-size:13px;font-weight:500;color:var(--muted);transition:all .12s;width:100%;background:none;border:none;font-family:'DM Sans',sans-serif;}
+.btn-out:hover{color:var(--red);background:var(--red-bg);}
 
-/* ── STATS GRID ── */
-.stats-grid{
-  display:grid;grid-template-columns:repeat(4,1fr);gap:16px;
-  margin-bottom:28px;
-}
-.stat-card{
-  background:var(--card);border:1px solid var(--border);
-  border-radius:10px;padding:22px;
-  position:relative;overflow:hidden;
-  transition:border-color .2s;
-}
-.stat-card:hover{border-color:var(--border2);}
-.stat-card::before{
-  content:'';position:absolute;top:0;left:0;right:0;height:2px;
-}
-.stat-card.c-emerald::before{background:var(--emerald);}
-.stat-card.c-gold::before{background:var(--gold);}
-.stat-card.c-blue::before{background:var(--blue);}
-.stat-card.c-rose::before{background:var(--rose);}
-.stat-icon{font-size:22px;margin-bottom:12px;}
-.stat-val{
-  font-family:'Syne',sans-serif;font-size:28px;font-weight:800;
-  letter-spacing:-1px;margin-bottom:4px;
-}
-.stat-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;}
-.stat-delta{font-size:11px;margin-top:6px;}
-.stat-delta.up{color:var(--emerald);}
-.stat-delta.down{color:var(--rose);}
+/* MAIN */
+.main{flex:1;overflow-y:auto;background:var(--bg);}
+.topbar{position:sticky;top:0;background:rgba(245,244,240,.94);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);padding:14px 28px;display:flex;align-items:center;justify-content:space-between;z-index:50;}
+.tb-l{display:flex;align-items:center;gap:12px;}
+.tb-title{font-family:'Playfair Display',serif;font-size:22px;font-weight:700;}
+.hbg{display:none;background:none;border:1.5px solid var(--border);color:var(--text);cursor:pointer;font-size:15px;padding:6px 10px;border-radius:9px;transition:all .15s;}
+.hbg:hover{background:var(--bg2);}
+.tb-r{display:flex;align-items:center;gap:12px;}
+.tb-date{font-size:12px;color:var(--muted);font-weight:500;}
+.content{padding:28px;animation:slideUp .3s both;}
 
-/* ── GRIDS ── */
-.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;}
-.grid-3{display:grid;grid-template-columns:2fr 1fr;gap:20px;margin-bottom:20px;}
-.panel{
-  background:var(--card);border:1px solid var(--border);
-  border-radius:10px;overflow:hidden;
-}
-.panel-header{
-  padding:16px 20px;border-bottom:1px solid var(--border);
-  display:flex;align-items:center;justify-content:space-between;
-}
-.panel-title{
-  font-family:'Syne',sans-serif;font-size:14px;font-weight:700;
-}
-.panel-body{padding:20px;}
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:7px;padding:9px 18px;border-radius:9px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all .15s;}
+.btn-sm{padding:7px 14px;font-size:12px;}
+.btn-p{background:var(--green);color:white;}
+.btn-p:hover{background:var(--green-l);transform:translateY(-1px);box-shadow:0 4px 14px rgba(24,145,110,.3);}
+.btn-g{background:var(--white);color:var(--text2);border:1.5px solid var(--border);}
+.btn-g:hover{border-color:var(--border2);color:var(--text);}
+.ic{width:30px;height:30px;border-radius:7px;background:var(--bg);border:1.5px solid var(--border);cursor:pointer;color:var(--muted);transition:all .12s;font-size:12px;display:inline-flex;align-items:center;justify-content:center;}
+.ic:hover{border-color:var(--green);color:var(--green);background:var(--green-bg);}
+.ic.d:hover{border-color:var(--red);color:var(--red);background:var(--red-bg);}
 
-/* ── TABLE ── */
-.table{width:100%;border-collapse:collapse;}
-.table th{
-  font-size:10px;color:var(--muted);text-transform:uppercase;
-  letter-spacing:1px;padding:10px 16px;
-  border-bottom:1px solid var(--border);text-align:left;
-}
-.table td{
-  padding:13px 16px;border-bottom:1px solid var(--border);
-  font-size:13px;color:var(--soft);
-}
-.table tr:last-child td{border-bottom:none;}
-.table tr:hover td{background:var(--deep);}
-.table-name{color:var(--text);font-weight:500;}
+/* BADGES */
+.badge{font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;display:inline-flex;align-items:center;gap:4px;white-space:nowrap;}
+.bg-g{background:var(--green-bg);color:var(--green);}
+.bg-a{background:var(--amber-bg);color:var(--amber);}
+.bg-r{background:var(--red-bg);color:var(--red);}
+.bg-b{background:var(--blue-bg);color:var(--blue);}
+.bg-x{background:var(--bg2);color:var(--muted);}
 
-/* ── BADGES ── */
-.badge{
-  font-size:10px;padding:3px 10px;border-radius:2px;
-  font-weight:600;text-transform:uppercase;letter-spacing:.5px;
-  display:inline-block;
-}
-.badge-ok{background:rgba(46,204,113,.12);color:var(--emerald);}
-.badge-warn{background:rgba(200,169,110,.12);color:var(--gold);}
-.badge-err{background:rgba(224,92,92,.12);color:var(--rose);}
-.badge-blue{background:rgba(92,157,224,.12);color:var(--blue);}
-.badge-muted{background:var(--border);color:var(--muted);}
+/* STAT CARDS */
+.sg{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;}
+.sc{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:0;box-shadow:var(--shadow);transition:box-shadow .2s,transform .2s;overflow:hidden;}
+.sc:hover{box-shadow:var(--shadow-md);transform:translateY(-2px);}
+.sc-top{display:flex;align-items:center;justify-content:space-between;padding:20px 22px 0;}
+.sc-ico{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;}
+.sc-pill{font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;}
+.sc-body{padding:16px 22px 22px;}
+.sc-val{font-family:'Playfair Display',serif;font-size:38px;font-weight:900;letter-spacing:-2px;line-height:1;color:var(--text);}
+.sc-val-sm{font-size:24px;}
+.sc-lbl{font-size:12px;color:var(--muted);font-weight:500;margin-top:6px;}
 
-/* ── BUTTONS ── */
-.btn{
-  display:inline-flex;align-items:center;gap:8px;
-  padding:9px 18px;border-radius:6px;
-  font-family:'Syne',sans-serif;font-size:12px;font-weight:700;
-  cursor:pointer;border:none;transition:all .2s;
-  text-transform:uppercase;letter-spacing:.5px;
-}
-.btn-sm{padding:7px 14px;font-size:11px;}
-.btn-primary{background:var(--emerald);color:var(--noir);}
-.btn-primary:hover{background:var(--emerald-l);}
-.btn-ghost{background:none;border:1px solid var(--border2);color:var(--soft);}
-.btn-ghost:hover{border-color:var(--emerald);color:var(--emerald);}
-.btn-danger{background:none;border:1px solid rgba(224,92,92,.3);color:var(--rose);}
-.btn-danger:hover{background:rgba(224,92,92,.1);}
-.btn-icon{padding:8px;border-radius:6px;background:none;border:1px solid var(--border);cursor:pointer;color:var(--muted);transition:all .2s;font-size:14px;}
-.btn-icon:hover{border-color:var(--emerald);color:var(--emerald);}
+/* PANELS */
+.panel{background:var(--white);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden;}
+.ph{padding:16px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.pt{font-size:13px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:8px;}
+.pb{padding:22px;}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;}
+.gm{display:grid;grid-template-columns:3fr 2fr;gap:20px;margin-bottom:20px;}
 
-/* ── AGENDA ── */
-.agenda-grid{
-  display:grid;gap:0;
-}
-.agenda-row{
-  display:flex;align-items:center;gap:12px;
-  padding:14px 20px;border-bottom:1px solid var(--border);
-  transition:background .15s;cursor:pointer;
-}
-.agenda-row:hover{background:var(--deep);}
-.agenda-row:last-child{border-bottom:none;}
-.agenda-hour{
-  font-size:13px;color:var(--emerald);
-  min-width:44px;font-weight:500;
-}
-.agenda-pet-wrap{flex:1;}
-.agenda-pet-name{font-size:14px;font-weight:600;color:var(--text);}
-.agenda-pet-detail{font-size:11px;color:var(--muted);margin-top:2px;}
-.agenda-actions{display:flex;gap:6px;}
+/* AGENDA ROWS */
+.ar{display:flex;align-items:center;gap:14px;padding:13px 22px;border-bottom:1px solid var(--border);transition:background .1s;}
+.ar:hover{background:var(--bg);}
+.ar:last-child{border-bottom:none;}
+.at{font-family:'Playfair Display',serif;font-size:17px;font-weight:700;color:var(--green);min-width:52px;}
+.al{width:2px;height:36px;background:var(--border);border-radius:2px;flex-shrink:0;}
+.al.g{background:var(--green);}
+.al.a{background:var(--amber);}
+.ai{flex:1;min-width:0;}
+.ap{font-size:14px;font-weight:600;color:var(--text);}
+.as{font-size:12px;color:var(--muted);margin-top:2px;}
+.aa{display:flex;gap:6px;align-items:center;flex-shrink:0;}
 
-/* ── MODAL ── */
-.modal-overlay{
-  position:fixed;inset:0;background:rgba(0,0,0,.7);
-  backdrop-filter:blur(4px);
-  display:none;align-items:center;justify-content:center;
-  z-index:500;padding:20px;
-}
-.modal-overlay.open{display:flex;}
-.modal{
-  background:var(--card);border:1px solid var(--border2);
-  border-radius:14px;width:100%;max-width:520px;
-  max-height:90vh;overflow-y:auto;
-  animation:slideIn .3s both;
-}
-.modal-header{
-  padding:24px 28px;border-bottom:1px solid var(--border);
-  display:flex;align-items:center;justify-content:space-between;
-  position:sticky;top:0;background:var(--card);z-index:1;
-}
-.modal-title{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;}
-.modal-close{
-  background:none;border:none;color:var(--muted);
-  cursor:pointer;font-size:20px;transition:color .2s;
-  width:32px;height:32px;display:flex;align-items:center;justify-content:center;
-  border-radius:50%;
-}
-.modal-close:hover{color:var(--text);background:var(--border);}
-.modal-body{padding:28px;}
-.modal-footer{
-  padding:20px 28px;border-top:1px solid var(--border);
-  display:flex;justify-content:flex-end;gap:10px;
-}
+/* TABLES */
+.tw{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;}
+thead tr{border-bottom:2px solid var(--border);}
+th{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.9px;padding:11px 16px;text-align:left;white-space:nowrap;}
+td{padding:14px 16px;border-bottom:1px solid var(--border);font-size:13px;color:var(--text2);vertical-align:middle;}
+tbody tr:last-child td{border-bottom:none;}
+tbody tr:nth-child(even) td{background:rgba(238,237,232,.4);}
+tbody tr:hover td{background:var(--green-bg)!important;}
+.tb{color:var(--text);font-weight:600;}
+.td{color:var(--muted);}
 
-/* ── FORM ── */
-.field{margin-bottom:18px;}
-.field-label{
-  font-size:11px;color:var(--muted);text-transform:uppercase;
-  letter-spacing:1px;margin-bottom:8px;display:block;
-}
-.field-input,.field-select,.field-textarea{
-  width:100%;background:var(--deep);
-  border:1px solid var(--border2);border-radius:6px;
-  padding:12px 14px;color:var(--text);
-  font-size:14px;font-family:'DM Mono',monospace;
-  outline:none;transition:border-color .2s;
-}
-.field-input:focus,.field-select:focus,.field-textarea:focus{border-color:var(--emerald);}
-.field-select{cursor:pointer;}
-.field-select option{background:var(--card);}
-.field-textarea{resize:vertical;min-height:80px;}
-.field-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+/* PET CARDS */
+.pg{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;}
+.pc{background:var(--white);border:1.5px solid var(--border);border-radius:var(--r);padding:20px;cursor:pointer;transition:all .2s;box-shadow:var(--shadow);}
+.pc:hover{border-color:var(--green);box-shadow:var(--shadow-md);transform:translateY(-2px);}
+.pav{width:52px;height:52px;border-radius:14px;background:var(--green-bg);border:1.5px solid rgba(24,145,110,.15);display:flex;align-items:center;justify-content:center;font-size:26px;}
+.pn{font-family:'Playfair Display',serif;font-size:18px;font-weight:700;margin-top:14px;}
+.pm{font-size:12px;color:var(--muted);margin-top:3px;}
+.pst{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0;padding:12px;background:var(--bg);border-radius:10px;}
+.psl{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;}
+.psv{font-size:14px;font-weight:600;margin-top:2px;}
 
-/* ── PET CARD ── */
-.pet-card{
-  background:var(--deep);border:1px solid var(--border);
-  border-radius:8px;padding:16px;
-  display:flex;align-items:center;gap:14px;
-  margin-bottom:10px;cursor:pointer;
-  transition:border-color .2s;
-}
-.pet-card:hover{border-color:var(--border2);}
-.pet-avatar{
-  width:44px;height:44px;border-radius:50%;
-  background:var(--emerald-dim);border:1px solid rgba(46,204,113,.2);
-  display:flex;align-items:center;justify-content:center;
-  font-size:20px;min-width:44px;
-}
-.pet-info{flex:1;}
-.pet-name{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;}
-.pet-meta{font-size:11px;color:var(--muted);margin-top:3px;}
+/* VAC ITEMS */
+.vi{display:flex;align-items:center;justify-content:space-between;padding:13px 0;border-bottom:1px solid var(--border);}
+.vi:last-child{border-bottom:none;}
+.vn{font-size:13px;font-weight:600;}
+.vd{font-size:11px;color:var(--muted);margin-top:2px;}
 
-/* ── VACUNA ROW ── */
-.vac-row{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:12px 0;border-bottom:1px solid var(--border);
-}
-.vac-row:last-child{border-bottom:none;}
-.vac-name{font-size:13px;color:var(--text);}
-.vac-date{font-size:11px;color:var(--muted);margin-top:2px;}
+/* CAJA */
+.ct{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:22px;}
+.cc{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:22px;box-shadow:var(--shadow);position:relative;overflow:hidden;}
+.cc::after{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+.cc.ing::after{background:linear-gradient(90deg,var(--green),var(--green-l));}
+.cc.eg::after{background:linear-gradient(90deg,var(--red),#e74c3c);}
+.cc.net::after{background:linear-gradient(90deg,var(--blue),#5b8af5);}
+.cv{font-family:'Playfair Display',serif;font-size:28px;font-weight:900;letter-spacing:-1px;margin-top:4px;}
+.cl{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;}
 
-/* ── CAJA ── */
-.caja-total{
-  display:grid;grid-template-columns:repeat(3,1fr);gap:12px;
-  margin-bottom:20px;
-}
-.caja-card{
-  background:var(--deep);border:1px solid var(--border);
-  border-radius:8px;padding:16px;
-}
-.caja-val{
-  font-family:'Syne',sans-serif;font-size:22px;font-weight:800;
-  letter-spacing:-1px;
-}
-.caja-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-top:4px;}
+/* ALERTS */
+.alert{display:flex;align-items:center;gap:12px;padding:13px 18px;border-radius:var(--r);margin-bottom:18px;font-size:13px;font-weight:500;}
+.al-a{background:var(--amber-bg);border:1px solid rgba(199,124,26,.2);color:var(--amber);}
+.al-r{background:var(--red-bg);border:1px solid rgba(192,57,43,.2);color:var(--red);}
 
-/* ── EMPTY STATE ── */
-.empty{
-  text-align:center;padding:60px 20px;
-}
-.empty-icon{font-size:48px;margin-bottom:16px;opacity:.4;}
-.empty-text{font-size:14px;color:var(--muted);}
+/* MODAL */
+.mo{position:fixed;inset:0;background:rgba(10,10,8,.45);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;z-index:500;padding:20px;}
+.mo.open{display:flex;}
+.md{background:var(--white);border-radius:18px;width:100%;max-width:500px;max-height:92vh;overflow-y:auto;box-shadow:var(--shadow-lg);animation:slideUp .25s both;}
+.mh{padding:22px 26px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--white);z-index:1;}
+.mt{font-family:'Playfair Display',serif;font-size:22px;font-weight:700;}
+.mx{width:32px;height:32px;border-radius:8px;background:var(--bg);border:1.5px solid var(--border);cursor:pointer;font-size:14px;color:var(--muted);display:flex;align-items:center;justify-content:center;transition:all .15s;}
+.mx:hover{background:var(--red-bg);color:var(--red);border-color:rgba(192,57,43,.2);}
+.mb{padding:26px;}
+.mf{padding:18px 26px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px;position:sticky;bottom:0;background:var(--white);}
 
-/* ── MOBILE ── */
+/* FORM */
+.fd{margin-bottom:16px;}
+.fdl{font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.9px;margin-bottom:7px;display:block;}
+.fdi,.fds,.fda{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:10px;padding:12px 14px;color:var(--text);font-size:13px;font-family:'DM Sans',sans-serif;outline:none;transition:border-color .15s,box-shadow .15s;}
+.fdi:focus,.fds:focus,.fda:focus{border-color:var(--green);box-shadow:0 0 0 3px var(--green-dim);background:var(--white);}
+.fds{cursor:pointer;}
+.fda{resize:vertical;min-height:80px;line-height:1.5;}
+.fr{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+
+/* EMPTY */
+.empty{text-align:center;padding:56px 20px;}
+.ei{font-size:40px;margin-bottom:12px;opacity:.25;}
+.et{font-size:13px;color:var(--muted);}
+
+/* CONFIG */
+.cfs{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:26px;box-shadow:var(--shadow);margin-bottom:16px;}
+.cft{font-size:13px;font-weight:700;margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid var(--border);}
+
+/* MOBILE */
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:199;display:none;}
+.ov.open{display:block;}
 @media(max-width:768px){
-  .sidebar{
-    position:fixed;left:0;top:0;bottom:0;z-index:200;
-    transform:translateX(-100%);
-  }
-  .sidebar.open{transform:translateX(0);}
-  .sidebar-overlay{
-    position:fixed;inset:0;background:rgba(0,0,0,.5);
-    z-index:199;display:none;
-  }
-  .sidebar-overlay.open{display:block;}
-  .topbar-menu{display:flex;}
-  .stats-grid{grid-template-columns:repeat(2,1fr);}
-  .grid-2,.grid-3{grid-template-columns:1fr;}
+  .sb{position:fixed;left:0;top:0;bottom:0;z-index:200;transform:translateX(-100%);box-shadow:var(--shadow-lg);}
+  .sb.open{transform:translateX(0);}
+  .hbg{display:flex;}
+  .sg{grid-template-columns:repeat(2,1fr);}
+  .g2,.gm{grid-template-columns:1fr;}
   .content{padding:16px;}
-  .topbar{padding:14px 16px;}
-  .field-row{grid-template-columns:1fr;}
+  .topbar{padding:12px 16px;}
+  .fr{grid-template-columns:1fr;}
+  .ct{grid-template-columns:1fr;}
+  .pg{grid-template-columns:1fr 1fr;}
 }
-@media(max-width:480px){
-  .stats-grid{grid-template-columns:1fr 1fr;}
-  .stat-val{font-size:22px;}
-  .caja-total{grid-template-columns:1fr;}
+@media(max-width:420px){
+  .pg{grid-template-columns:1fr;}
+  .sc-val{font-size:28px;}
 }
 </style>
 </head>
 <body>
 
-<!-- LOADER -->
 <div id="loader">
-  <div class="loader-logo">Vet<em>OS</em></div>
-  <div class="loader-bar"><div class="loader-bar-fill"></div></div>
+  <div class="ld-logo">Vet<em>OS</em></div>
+  <div class="ld-bar"><div class="ld-fill"></div></div>
 </div>
 
-<!-- LOGIN -->
 <div id="loginScreen">
-  <div class="login-bg"></div>
-  <div class="login-glow"></div>
-  <div class="login-box">
-    <div class="login-logo">Vet<em>OS</em></div>
-    <div class="login-sub">Sistema de Gestión Veterinaria</div>
-    <div class="form-group">
-      <label class="form-label">Usuario</label>
-      <input class="form-input" id="lu" type="text" placeholder="veterinaria@clinica.com" autocomplete="username">
+  <div class="ln-wrap">
+    <div class="ln-brand">Vet<em>OS</em></div>
+    <div class="ln-sub">Sistema de gestión veterinaria</div>
+    <div class="ln-card">
+      <label class="fl">Usuario</label>
+      <input class="fi" id="lu" type="text" placeholder="usuario@clinica.com" autocomplete="username">
+      <label class="fl">Contraseña</label>
+      <input class="fi" id="lp" type="password" placeholder="••••••••" autocomplete="current-password">
+      <button class="btn-ln" id="btnLn" onclick="doLogin()">Ingresar al sistema →</button>
+      <div class="ln-err" id="lnErr"></div>
+      <div class="ln-hint">Demo: cualquier usuario y contraseña</div>
     </div>
-    <div class="form-group">
-      <label class="form-label">Contraseña</label>
-      <input class="form-input" id="lp" type="password" placeholder="••••••••" autocomplete="current-password">
-    </div>
-    <button class="btn-login" id="btnLogin" onclick="doLogin()">INGRESAR</button>
-    <div class="login-err" id="loginErr"></div>
   </div>
 </div>
 
-<!-- SIDEBAR OVERLAY (mobile) -->
-<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+<div class="ov" id="ov" onclick="closeSb()"></div>
 
-<!-- APP -->
-<div id="appShell" style="display:none;flex-direction:row;">
-
-  <aside class="sidebar" id="sidebar">
-    <div class="sidebar-logo">Vet<em>OS</em></div>
-    <div class="sidebar-clinic">
-      <div class="clinic-name" id="clinicName">Clínica Veterinaria</div>
-      <div class="clinic-plan">Plan Pro</div>
-    </div>
-    <div class="nav-section">Principal</div>
-    <a class="nav-item active" onclick="goTo('dashboard')" href="#">
-      <span class="nav-icon">📊</span>Dashboard
-    </a>
-    <a class="nav-item" onclick="goTo('agenda')" href="#">
-      <span class="nav-icon">📅</span>Agenda
-    </a>
-    <a class="nav-item" onclick="goTo('mascotas')" href="#">
-      <span class="nav-icon">🐾</span>Mascotas
-    </a>
-    <a class="nav-item" onclick="goTo('clientes')" href="#">
-      <span class="nav-icon">👥</span>Clientes
-    </a>
-    <div class="nav-section">Gestión</div>
-    <a class="nav-item" onclick="goTo('vacunas')" href="#">
-      <span class="nav-icon">💉</span>Vacunas
-    </a>
-    <a class="nav-item" onclick="goTo('caja')" href="#">
-      <span class="nav-icon">💰</span>Caja
-    </a>
-    <a class="nav-item" onclick="goTo('inventario')" href="#">
-      <span class="nav-icon">📦</span>Inventario
-    </a>
-    <div class="nav-section">Sistema</div>
-    <a class="nav-item" onclick="goTo('config')" href="#">
-      <span class="nav-icon">⚙️</span>Configuración
-    </a>
-    <div class="sidebar-bottom">
-      <button class="btn-logout" onclick="doLogout()">
-        <span>↩</span> Cerrar sesión
+<div id="app">
+  <aside class="sb" id="sb">
+    <div class="sb-logo">Vet<em>OS</em><div class="logo-pill">Pro</div></div>
+    <div class="sb-clinic"><div class="cn" id="cnName">Clínica Veterinaria</div><div class="cp">Plan Pro · Activo</div></div>
+    <div class="ns">Principal</div>
+    <a class="ni active" onclick="g('dashboard')" href="#"><div class="ni-ico">📊</div>Dashboard</a>
+    <a class="ni" onclick="g('agenda')" href="#"><div class="ni-ico">📅</div>Agenda</a>
+    <a class="ni" onclick="g('mascotas')" href="#"><div class="ni-ico">🐾</div>Mascotas</a>
+    <a class="ni" onclick="g('clientes')" href="#"><div class="ni-ico">👥</div>Clientes</a>
+    <div class="ns">Gestión</div>
+    <a class="ni" onclick="g('vacunas')" href="#"><div class="ni-ico">💉</div>Vacunas</a>
+    <a class="ni" onclick="g('caja')" href="#"><div class="ni-ico">💰</div>Caja</a>
+    <a class="ni" onclick="g('inventario')" href="#"><div class="ni-ico">📦</div>Inventario</a>
+    <div class="ns">Sistema</div>
+    <a class="ni" onclick="g('config')" href="#"><div class="ni-ico">⚙️</div>Configuración</a>
+    <div class="sb-foot">
+      <button class="btn-out" onclick="doLogout()">
+        <div style="width:34px;height:34px;border-radius:9px;background:var(--bg);display:flex;align-items:center;justify-content:center;">↩</div>Cerrar sesión
       </button>
     </div>
   </aside>
-
-  <div class="main" id="mainArea">
+  <div class="main">
     <div class="topbar">
-      <div style="display:flex;align-items:center;gap:14px;">
-        <button class="topbar-menu" onclick="toggleSidebar()">☰</button>
-        <div class="topbar-title" id="topbarTitle">Dashboard</div>
-      </div>
-      <div class="topbar-right">
-        <div class="topbar-date" id="topbarDate"></div>
-        <button class="btn btn-primary btn-sm" id="topbarBtn" onclick="topbarAction()">+ Nuevo turno</button>
-      </div>
+      <div class="tb-l"><button class="hbg" onclick="toggleSb()">☰</button><div class="tb-title" id="tbTitle">Dashboard</div></div>
+      <div class="tb-r"><div class="tb-date" id="tbDate"></div><button class="btn btn-p btn-sm" id="tbBtn" onclick="tbAct()">+ Nuevo turno</button></div>
     </div>
-    <div class="content" id="content"></div>
+    <div class="content" id="cnt"></div>
   </div>
 </div>
 
 <!-- MODALS -->
-<div class="modal-overlay" id="modalTurno">
-  <div class="modal">
-    <div class="modal-header">
-      <div class="modal-title" id="modalTurnoTitle">Nuevo Turno</div>
-      <button class="modal-close" onclick="closeModal('modalTurno')">✕</button>
-    </div>
-    <div class="modal-body">
-      <div class="field-row">
-        <div class="field">
-          <label class="field-label">Fecha</label>
-          <input class="field-input" id="tFecha" type="date">
-        </div>
-        <div class="field">
-          <label class="field-label">Hora</label>
-          <input class="field-input" id="tHora" type="time">
-        </div>
-      </div>
-      <div class="field">
-        <label class="field-label">Mascota</label>
-        <select class="field-select" id="tMascota">
-          <option value="">Seleccionar mascota...</option>
-        </select>
-      </div>
-      <div class="field">
-        <label class="field-label">Motivo de consulta</label>
-        <select class="field-select" id="tMotivo">
-          <option>Consulta general</option>
-          <option>Vacunación</option>
-          <option>Control de rutina</option>
-          <option>Cirugía</option>
-          <option>Urgencia</option>
-          <option>Desparasitación</option>
-          <option>Otro</option>
-        </select>
-      </div>
-      <div class="field">
-        <label class="field-label">Veterinario</label>
-        <select class="field-select" id="tVet">
-          <option>Dr. Principal</option>
-        </select>
-      </div>
-      <div class="field">
-        <label class="field-label">Notas</label>
-        <textarea class="field-textarea" id="tNotas" placeholder="Observaciones previas..."></textarea>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal('modalTurno')">Cancelar</button>
-      <button class="btn btn-primary" onclick="guardarTurno()">Guardar turno</button>
-    </div>
+<div class="mo" id="mT"><div class="md">
+  <div class="mh"><div class="mt">Nuevo Turno</div><button class="mx" onclick="cM('mT')">✕</button></div>
+  <div class="mb">
+    <div class="fr"><div class="fd"><label class="fdl">Fecha</label><input class="fdi" id="tFec" type="date"></div><div class="fd"><label class="fdl">Hora</label><input class="fdi" id="tHor" type="time"></div></div>
+    <div class="fd"><label class="fdl">Mascota</label><select class="fds" id="tMas"><option value="">Seleccionar...</option></select></div>
+    <div class="fd"><label class="fdl">Motivo</label><select class="fds" id="tMot"><option>Consulta general</option><option>Vacunación</option><option>Control de rutina</option><option>Cirugía</option><option>Urgencia</option><option>Desparasitación</option><option>Otro</option></select></div>
+    <div class="fd"><label class="fdl">Notas</label><textarea class="fda" id="tNot" placeholder="Observaciones..."></textarea></div>
   </div>
-</div>
+  <div class="mf"><button class="btn btn-g" onclick="cM('mT')">Cancelar</button><button class="btn btn-p" onclick="gTurno()">Guardar turno</button></div>
+</div></div>
 
-<div class="modal-overlay" id="modalMascota">
-  <div class="modal">
-    <div class="modal-header">
-      <div class="modal-title">Nueva Mascota</div>
-      <button class="modal-close" onclick="closeModal('modalMascota')">✕</button>
-    </div>
-    <div class="modal-body">
-      <div class="field-row">
-        <div class="field">
-          <label class="field-label">Nombre de la mascota</label>
-          <input class="field-input" id="mNombre" type="text" placeholder="Max">
-        </div>
-        <div class="field">
-          <label class="field-label">Especie</label>
-          <select class="field-select" id="mEspecie">
-            <option>🐕 Perro</option>
-            <option>🐈 Gato</option>
-            <option>🐇 Conejo</option>
-            <option>🦜 Ave</option>
-            <option>🐹 Roedor</option>
-            <option>🐢 Reptil</option>
-            <option>Otro</option>
-          </select>
-        </div>
-      </div>
-      <div class="field-row">
-        <div class="field">
-          <label class="field-label">Raza</label>
-          <input class="field-input" id="mRaza" type="text" placeholder="Labrador">
-        </div>
-        <div class="field">
-          <label class="field-label">Sexo</label>
-          <select class="field-select" id="mSexo">
-            <option>Macho</option>
-            <option>Hembra</option>
-          </select>
-        </div>
-      </div>
-      <div class="field-row">
-        <div class="field">
-          <label class="field-label">Fecha de nacimiento</label>
-          <input class="field-input" id="mNacimiento" type="date">
-        </div>
-        <div class="field">
-          <label class="field-label">Peso (kg)</label>
-          <input class="field-input" id="mPeso" type="number" step="0.1" placeholder="5.5">
-        </div>
-      </div>
-      <div class="field">
-        <label class="field-label">Dueño</label>
-        <select class="field-select" id="mDueno">
-          <option value="">Seleccionar dueño...</option>
-        </select>
-      </div>
-      <div class="field">
-        <label class="field-label">Alergias / Observaciones</label>
-        <textarea class="field-textarea" id="mAlergias" placeholder="Alergias conocidas, condiciones especiales..."></textarea>
-      </div>
-      <div class="field">
-        <label class="field-label">Color / Señas particulares</label>
-        <input class="field-input" id="mColor" type="text" placeholder="Negro con manchas blancas">
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal('modalMascota')">Cancelar</button>
-      <button class="btn btn-primary" onclick="guardarMascota()">Guardar mascota</button>
-    </div>
+<div class="mo" id="mM"><div class="md">
+  <div class="mh"><div class="mt">Nueva Mascota</div><button class="mx" onclick="cM('mM')">✕</button></div>
+  <div class="mb">
+    <div class="fr"><div class="fd"><label class="fdl">Nombre</label><input class="fdi" id="mNom" type="text" placeholder="Max"></div><div class="fd"><label class="fdl">Especie</label><select class="fds" id="mEsp"><option>🐕 Perro</option><option>🐈 Gato</option><option>🐇 Conejo</option><option>🦜 Ave</option><option>🐹 Roedor</option><option>Otro</option></select></div></div>
+    <div class="fr"><div class="fd"><label class="fdl">Raza</label><input class="fdi" id="mRaz" type="text" placeholder="Labrador"></div><div class="fd"><label class="fdl">Sexo</label><select class="fds" id="mSex"><option>Macho</option><option>Hembra</option></select></div></div>
+    <div class="fr"><div class="fd"><label class="fdl">Nacimiento</label><input class="fdi" id="mNac" type="date"></div><div class="fd"><label class="fdl">Peso (kg)</label><input class="fdi" id="mPes" type="number" step="0.1" placeholder="5.5"></div></div>
+    <div class="fd"><label class="fdl">Dueño</label><select class="fds" id="mDue"><option value="">Seleccionar...</option></select></div>
+    <div class="fd"><label class="fdl">Alergias / Notas</label><textarea class="fda" id="mAle" placeholder="Alergias, condiciones especiales..."></textarea></div>
   </div>
-</div>
+  <div class="mf"><button class="btn btn-g" onclick="cM('mM')">Cancelar</button><button class="btn btn-p" onclick="gMasc()">Guardar</button></div>
+</div></div>
 
-<div class="modal-overlay" id="modalCliente">
-  <div class="modal">
-    <div class="modal-header">
-      <div class="modal-title">Nuevo Cliente</div>
-      <button class="modal-close" onclick="closeModal('modalCliente')">✕</button>
-    </div>
-    <div class="modal-body">
-      <div class="field-row">
-        <div class="field">
-          <label class="field-label">Nombre completo</label>
-          <input class="field-input" id="cNombre" type="text" placeholder="María González">
-        </div>
-        <div class="field">
-          <label class="field-label">Teléfono / WhatsApp</label>
-          <input class="field-input" id="cTel" type="tel" placeholder="0981 000 000">
-        </div>
-      </div>
-      <div class="field">
-        <label class="field-label">Email</label>
-        <input class="field-input" id="cEmail" type="email" placeholder="correo@ejemplo.com">
-      </div>
-      <div class="field">
-        <label class="field-label">Dirección</label>
-        <input class="field-input" id="cDir" type="text" placeholder="Av. España 1234, Asunción">
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal('modalCliente')">Cancelar</button>
-      <button class="btn btn-primary" onclick="guardarCliente()">Guardar cliente</button>
-    </div>
+<div class="mo" id="mC"><div class="md">
+  <div class="mh"><div class="mt">Nuevo Cliente</div><button class="mx" onclick="cM('mC')">✕</button></div>
+  <div class="mb">
+    <div class="fr"><div class="fd"><label class="fdl">Nombre completo</label><input class="fdi" id="cNom" type="text" placeholder="María González"></div><div class="fd"><label class="fdl">WhatsApp</label><input class="fdi" id="cTel" type="tel" placeholder="0981 000 000"></div></div>
+    <div class="fd"><label class="fdl">Email</label><input class="fdi" id="cEma" type="email" placeholder="correo@ejemplo.com"></div>
+    <div class="fd"><label class="fdl">Dirección</label><input class="fdi" id="cDir" type="text" placeholder="Av. España 1234, Asunción"></div>
   </div>
-</div>
+  <div class="mf"><button class="btn btn-g" onclick="cM('mC')">Cancelar</button><button class="btn btn-p" onclick="gCli()">Guardar</button></div>
+</div></div>
 
-<div class="modal-overlay" id="modalVacuna">
-  <div class="modal">
-    <div class="modal-header">
-      <div class="modal-title">Registrar Vacuna</div>
-      <button class="modal-close" onclick="closeModal('modalVacuna')">✕</button>
-    </div>
-    <div class="modal-body">
-      <div class="field">
-        <label class="field-label">Mascota</label>
-        <select class="field-select" id="vMascota"></select>
-      </div>
-      <div class="field-row">
-        <div class="field">
-          <label class="field-label">Vacuna</label>
-          <select class="field-select" id="vNombre">
-            <option>Antirrábica</option>
-            <option>Parvovirus</option>
-            <option>Moquillo</option>
-            <option>Hepatitis</option>
-            <option>Leptospirosis</option>
-            <option>Traqueobronquitis</option>
-            <option>Triple felina</option>
-            <option>Leucemia felina</option>
-            <option>Otra</option>
-          </select>
-        </div>
-        <div class="field">
-          <label class="field-label">Fecha de aplicación</label>
-          <input class="field-input" id="vFecha" type="date">
-        </div>
-      </div>
-      <div class="field-row">
-        <div class="field">
-          <label class="field-label">Próxima dosis</label>
-          <input class="field-input" id="vProxima" type="date">
-        </div>
-        <div class="field">
-          <label class="field-label">Lote / Marca</label>
-          <input class="field-input" id="vLote" type="text" placeholder="Nobivac">
-        </div>
-      </div>
-      <div class="field">
-        <label class="field-label">Notas</label>
-        <textarea class="field-textarea" id="vNotas" placeholder="Observaciones de la aplicación..."></textarea>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal('modalVacuna')">Cancelar</button>
-      <button class="btn btn-primary" onclick="guardarVacuna()">Registrar vacuna</button>
-    </div>
+<div class="mo" id="mV"><div class="md">
+  <div class="mh"><div class="mt">Registrar Vacuna</div><button class="mx" onclick="cM('mV')">✕</button></div>
+  <div class="mb">
+    <div class="fd"><label class="fdl">Mascota</label><select class="fds" id="vMas"></select></div>
+    <div class="fr"><div class="fd"><label class="fdl">Vacuna</label><select class="fds" id="vNom"><option>Antirrábica</option><option>Parvovirus</option><option>Moquillo</option><option>Hepatitis</option><option>Leptospirosis</option><option>Triple felina</option><option>Leucemia felina</option><option>Otra</option></select></div><div class="fd"><label class="fdl">Aplicada</label><input class="fdi" id="vFec" type="date"></div></div>
+    <div class="fr"><div class="fd"><label class="fdl">Próxima dosis</label><input class="fdi" id="vPro" type="date"></div><div class="fd"><label class="fdl">Marca / Lote</label><input class="fdi" id="vLot" type="text" placeholder="Nobivac"></div></div>
   </div>
-</div>
+  <div class="mf"><button class="btn btn-g" onclick="cM('mV')">Cancelar</button><button class="btn btn-p" onclick="gVac()">Registrar</button></div>
+</div></div>
 
-<div class="modal-overlay" id="modalCaja">
-  <div class="modal">
-    <div class="modal-header">
-      <div class="modal-title" id="modalCajaTitle">Nuevo Ingreso</div>
-      <button class="modal-close" onclick="closeModal('modalCaja')">✕</button>
-    </div>
-    <div class="modal-body">
-      <div class="field">
-        <label class="field-label">Tipo</label>
-        <select class="field-select" id="cajaTipo">
-          <option value="ingreso">💚 Ingreso</option>
-          <option value="egreso">🔴 Egreso</option>
-        </select>
-      </div>
-      <div class="field">
-        <label class="field-label">Concepto</label>
-        <select class="field-select" id="cajaConcepto">
-          <option>Consulta general</option>
-          <option>Vacunación</option>
-          <option>Cirugía</option>
-          <option>Internación</option>
-          <option>Productos / Medicamentos</option>
-          <option>Baño y peluquería</option>
-          <option>Insumos</option>
-          <option>Servicios</option>
-          <option>Otro</option>
-        </select>
-      </div>
-      <div class="field-row">
-        <div class="field">
-          <label class="field-label">Monto (₲)</label>
-          <input class="field-input" id="cajaMonto" type="number" placeholder="150000">
-        </div>
-        <div class="field">
-          <label class="field-label">Fecha</label>
-          <input class="field-input" id="cajaFecha" type="date">
-        </div>
-      </div>
-      <div class="field">
-        <label class="field-label">Cliente (opcional)</label>
-        <select class="field-select" id="cajaCliente">
-          <option value="">Sin especificar</option>
-        </select>
-      </div>
-      <div class="field">
-        <label class="field-label">Notas</label>
-        <input class="field-input" id="cajaNota" type="text" placeholder="Descripción adicional">
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal('modalCaja')">Cancelar</button>
-      <button class="btn btn-primary" onclick="guardarMovimiento()">Guardar</button>
-    </div>
+<div class="mo" id="mK"><div class="md">
+  <div class="mh"><div class="mt">Nuevo Movimiento</div><button class="mx" onclick="cM('mK')">✕</button></div>
+  <div class="mb">
+    <div class="fd"><label class="fdl">Tipo</label><select class="fds" id="kTip"><option value="ingreso">✅ Ingreso</option><option value="egreso">❌ Egreso</option></select></div>
+    <div class="fd"><label class="fdl">Concepto</label><select class="fds" id="kCon"><option>Consulta general</option><option>Vacunación</option><option>Cirugía</option><option>Internación</option><option>Productos / Medicamentos</option><option>Baño y peluquería</option><option>Insumos</option><option>Otro</option></select></div>
+    <div class="fr"><div class="fd"><label class="fdl">Monto (₲)</label><input class="fdi" id="kMon" type="number" placeholder="150000"></div><div class="fd"><label class="fdl">Fecha</label><input class="fdi" id="kFec" type="date"></div></div>
+    <div class="fd"><label class="fdl">Cliente</label><select class="fds" id="kCli"><option value="">Sin especificar</option></select></div>
+    <div class="fd"><label class="fdl">Nota</label><input class="fdi" id="kNot" type="text" placeholder="Descripción..."></div>
   </div>
-</div>
+  <div class="mf"><button class="btn btn-g" onclick="cM('mK')">Cancelar</button><button class="btn btn-p" onclick="gMov()">Guardar</button></div>
+</div></div>
 
-<div class="modal-overlay" id="modalInventario">
-  <div class="modal">
-    <div class="modal-header">
-      <div class="modal-title">Nuevo Producto</div>
-      <button class="modal-close" onclick="closeModal('modalInventario')">✕</button>
-    </div>
-    <div class="modal-body">
-      <div class="field">
-        <label class="field-label">Nombre del producto</label>
-        <input class="field-input" id="invNombre" type="text" placeholder="Vacuna Antirrábica">
-      </div>
-      <div class="field-row">
-        <div class="field">
-          <label class="field-label">Categoría</label>
-          <select class="field-select" id="invCat">
-            <option>Vacunas</option>
-            <option>Medicamentos</option>
-            <option>Antiparasitarios</option>
-            <option>Insumos</option>
-            <option>Alimentos</option>
-            <option>Accesorios</option>
-            <option>Otro</option>
-          </select>
-        </div>
-        <div class="field">
-          <label class="field-label">Stock actual</label>
-          <input class="field-input" id="invStock" type="number" placeholder="20">
-        </div>
-      </div>
-      <div class="field-row">
-        <div class="field">
-          <label class="field-label">Stock mínimo</label>
-          <input class="field-input" id="invMin" type="number" placeholder="5">
-        </div>
-        <div class="field">
-          <label class="field-label">Precio venta (₲)</label>
-          <input class="field-input" id="invPrecio" type="number" placeholder="85000">
-        </div>
-      </div>
-      <div class="field">
-        <label class="field-label">Proveedor</label>
-        <input class="field-input" id="invProv" type="text" placeholder="Distribuidora Veterinaria">
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal('modalInventario')">Cancelar</button>
-      <button class="btn btn-primary" onclick="guardarProducto()">Guardar producto</button>
-    </div>
+<div class="mo" id="mI"><div class="md">
+  <div class="mh"><div class="mt">Nuevo Producto</div><button class="mx" onclick="cM('mI')">✕</button></div>
+  <div class="mb">
+    <div class="fd"><label class="fdl">Nombre</label><input class="fdi" id="iNom" type="text" placeholder="Vacuna Antirrábica"></div>
+    <div class="fr"><div class="fd"><label class="fdl">Categoría</label><select class="fds" id="iCat"><option>Vacunas</option><option>Medicamentos</option><option>Antiparasitarios</option><option>Insumos</option><option>Alimentos</option><option>Accesorios</option><option>Otro</option></select></div><div class="fd"><label class="fdl">Stock actual</label><input class="fdi" id="iSto" type="number" placeholder="20"></div></div>
+    <div class="fr"><div class="fd"><label class="fdl">Stock mínimo</label><input class="fdi" id="iMin" type="number" placeholder="5"></div><div class="fd"><label class="fdl">Precio (₲)</label><input class="fdi" id="iPre" type="number" placeholder="85000"></div></div>
+    <div class="fd"><label class="fdl">Proveedor</label><input class="fdi" id="iPro" type="text" placeholder="Distribuidora Veterinaria"></div>
   </div>
-</div>
+  <div class="mf"><button class="btn btn-g" onclick="cM('mI')">Cancelar</button><button class="btn btn-p" onclick="gProd()">Guardar</button></div>
+</div></div>
 
 <script>
-// ─── APP STATE ───
-const APP = {
-  seccion: 'dashboard',
-  turno: [],
-  mascotas: [],
-  clientes: [],
-  vacunas: [],
-  caja: [],
-  inventario: [],
-  config: { clinica: 'Clínica Veterinaria Demo', veterinario: 'Dr. Principal' }
-};
+const D={s:'dashboard',T:[],M:[],C:[],V:[],K:[],I:[],cfg:{cn:'Clínica Veterinaria Demo',vet:'Dr. Principal'}};
+const HOY=new Date().toISOString().slice(0,10);
+D.C=[{id:'C1',n:'Carlos Rodríguez',t:'0981234567',e:'carlos@demo.com',d:'Av. España 1234'},{id:'C2',n:'Ana Méndez',t:'0971345678',e:'ana@demo.com',d:'Calle Palma 567'},{id:'C3',n:'Luis Gómez',t:'0991456789',e:'luis@demo.com',d:'B. Mburucuya 890'}];
+D.M=[{id:'M1',n:'Max',e:'🐕 Perro',r:'Labrador',s:'Macho',p:28,d:'C1',b:'2021-03-15',a:'Ninguna'},{id:'M2',n:'Luna',e:'🐈 Gato',r:'Persa',s:'Hembra',p:4.2,d:'C2',b:'2022-07-20',a:'Mariscos'},{id:'M3',n:'Bunny',e:'🐇 Conejo',r:'Belier',s:'Hembra',p:1.8,d:'C3',b:'2023-01-10',a:'Ninguna'}];
+D.T=[{id:'T1',f:HOY,h:'09:00',m:'M1',mo:'Consulta general',e:'Confirmado'},{id:'T2',f:HOY,h:'10:30',m:'M2',mo:'Vacunación',e:'En espera'},{id:'T3',f:HOY,h:'11:00',m:'M3',mo:'Control de rutina',e:'Confirmado'}];
+D.V=[{id:'V1',m:'M1',n:'Antirrábica',f:'2025-06-15',p:'2026-06-15',l:'Nobivac'},{id:'V2',m:'M1',n:'Parvovirus',f:'2025-06-15',p:'2026-06-15',l:'Nobivac'},{id:'V3',m:'M2',n:'Triple felina',f:'2025-08-10',p:'2026-03-10',l:'Felocell'}];
+D.K=[{id:'K1',f:HOY,t:'ingreso',c:'Consulta general',mo:80000,cl:'C1',no:'Max'},{id:'K2',f:HOY,t:'ingreso',c:'Vacunación',mo:120000,cl:'C2',no:'Luna'},{id:'K3',f:HOY,t:'egreso',c:'Insumos',mo:45000,cl:'',no:'Guantes'}];
+D.I=[{id:'I1',n:'Vacuna Antirrábica',c:'Vacunas',s:18,mi:5,p:85000,pr:'Distribuidora Vet'},{id:'I2',n:'Amoxicilina 250mg',c:'Medicamentos',s:3,mi:10,p:25000,pr:'Farmavida'},{id:'I3',n:'Frontline Plus',c:'Antiparasitarios',s:12,mi:5,p:95000,pr:'Boehringer'},{id:'I4',n:'Guantes descartables',c:'Insumos',s:2,mi:20,p:15000,pr:'MedSupply'}];
 
-// Demo data
-APP.clientes = [
-  {id:'C1', nombre:'Carlos Rodríguez', tel:'0981 234 567', email:'carlos@demo.com', dir:'Av. España 1234'},
-  {id:'C2', nombre:'Ana Méndez', tel:'0971 345 678', email:'ana@demo.com', dir:'Calle Palma 567'},
-  {id:'C3', nombre:'Luis Gómez', tel:'0991 456 789', email:'luis@demo.com', dir:'B. Mburucuya 890'}
-];
-APP.mascotas = [
-  {id:'M1', nombre:'Max', especie:'🐕 Perro', raza:'Labrador', sexo:'Macho', peso:28, dueno:'C1', nacimiento:'2021-03-15', alergias:'Ninguna', color:'Amarillo'},
-  {id:'M2', nombre:'Luna', especie:'🐈 Gato', raza:'Persa', sexo:'Hembra', peso:4.2, dueno:'C2', nacimiento:'2022-07-20', alergias:'Mariscos', color:'Blanco'},
-  {id:'M3', nombre:'Bunny', especie:'🐇 Conejo', raza:'Belier', sexo:'Hembra', peso:1.8, dueno:'C3', nacimiento:'2023-01-10', alergias:'Ninguna', color:'Gris'}
-];
-const hoy = new Date().toISOString().slice(0,10);
-APP.turno = [
-  {id:'T1', fecha:hoy, hora:'09:00', mascota:'M1', motivo:'Consulta general', vet:'Dr. Principal', estado:'Confirmado'},
-  {id:'T2', fecha:hoy, hora:'10:30', mascota:'M2', motivo:'Vacunación', vet:'Dr. Principal', estado:'En espera'},
-  {id:'T3', fecha:hoy, hora:'11:00', mascota:'M3', motivo:'Control', vet:'Dr. Principal', estado:'Confirmado'},
-];
-APP.vacunas = [
-  {id:'V1', mascota:'M1', nombre:'Antirrábica', fecha:'2025-06-15', proxima:'2026-06-15', lote:'Nobivac', notas:''},
-  {id:'V2', mascota:'M1', nombre:'Parvovirus', fecha:'2025-06-15', proxima:'2026-06-15', lote:'Nobivac', notas:''},
-  {id:'V3', mascota:'M2', nombre:'Triple felina', fecha:'2025-08-10', proxima:'2026-03-10', lote:'Felocell', notas:''},
-  {id:'V4', mascota:'M2', nombre:'Leucemia felina', fecha:'2025-08-10', proxima:'2026-04-10', lote:'Felocell', notas:''},
-];
-APP.caja = [
-  {id:'K1', fecha:hoy, tipo:'ingreso', concepto:'Consulta general', monto:80000, cliente:'C1', nota:'Max'},
-  {id:'K2', fecha:hoy, tipo:'ingreso', concepto:'Vacunación', monto:120000, cliente:'C2', nota:'Luna'},
-  {id:'K3', fecha:hoy, tipo:'egreso', concepto:'Insumos', monto:45000, cliente:'', nota:'Guantes y jeringas'},
-];
-APP.inventario = [
-  {id:'I1', nombre:'Vacuna Antirrábica', cat:'Vacunas', stock:18, min:5, precio:85000, prov:'Distribuidora Vet'},
-  {id:'I2', nombre:'Amoxicilina 250mg', cat:'Medicamentos', stock:3, min:10, precio:25000, prov:'Farmavida'},
-  {id:'I3', nombre:'Frontline Plus', cat:'Antiparasitarios', stock:12, min:5, precio:95000, prov:'Boehringer'},
-  {id:'I4', nombre:'Guantes descartables', cat:'Insumos', stock:2, min:20, precio:15000, prov:'MedSupply'},
-];
+const gM=id=>D.M.find(m=>m.id===id)||{};
+const gC=id=>D.C.find(c=>c.id===id)||{};
+const fmt=n=>new Intl.NumberFormat('es-PY').format(n);
+const uid=()=>'_'+Math.random().toString(36).slice(2,8);
+const dias=f=>Math.ceil((new Date(f)-new Date())/86400000);
+const vb=p=>{const d=dias(p);if(d<0)return'<span class="badge bg-r">● Vencida</span>';if(d<=14)return`<span class="badge bg-a">⚠ ${d}d</span>`;return'<span class="badge bg-g">✓ Al día</span>';};
 
-// ─── INIT ───
-window.addEventListener('load', () => {
-  setTimeout(() => {
-    document.getElementById('loader').style.opacity = '0';
-    document.getElementById('loader').style.transition = 'opacity .4s';
-    setTimeout(() => {
-      document.getElementById('loader').style.display = 'none';
-      document.getElementById('loginScreen').style.display = 'flex';
-    }, 400);
-  }, 1400);
-  const d = new Date();
-  document.getElementById('topbarDate').textContent =
-    d.toLocaleDateString('es-PY', {weekday:'long', day:'numeric', month:'long'});
+window.addEventListener('load',()=>{
+  setTimeout(()=>{document.getElementById('loader').style.transition='opacity .4s';document.getElementById('loader').style.opacity='0';setTimeout(()=>{document.getElementById('loader').style.display='none';document.getElementById('loginScreen').style.display='flex';},400);},1400);
+  document.getElementById('tbDate').textContent=new Date().toLocaleDateString('es-PY',{weekday:'long',day:'numeric',month:'long'});
 });
 
-// ─── LOGIN ───
-function doLogin() {
-  const u = document.getElementById('lu').value.trim();
-  const p = document.getElementById('lp').value;
-  const btn = document.getElementById('btnLogin');
-  const err = document.getElementById('loginErr');
-  if (!u || !p) { showLoginErr('Completá usuario y contraseña'); return; }
-  btn.textContent = 'INGRESANDO...'; btn.disabled = true;
-  setTimeout(() => {
-    // Demo: cualquier usuario/contraseña
-    btn.textContent = 'INGRESAR'; btn.disabled = false;
-    err.style.display = 'none';
-    document.getElementById('loginScreen').style.display = 'none';
-    document.getElementById('appShell').style.display = 'flex';
-    document.getElementById('clinicName').textContent = APP.config.clinica;
-    goTo('dashboard');
-    try { document.documentElement.requestFullscreen?.(); } catch(e){}
-  }, 800);
+function doLogin(){
+  const u=document.getElementById('lu').value.trim(),p=document.getElementById('lp').value,btn=document.getElementById('btnLn');
+  if(!u||!p){document.getElementById('lnErr').textContent='Completá usuario y contraseña';document.getElementById('lnErr').style.display='block';return;}
+  btn.textContent='Ingresando...';btn.disabled=true;
+  setTimeout(()=>{btn.textContent='Ingresar al sistema →';btn.disabled=false;document.getElementById('lnErr').style.display='none';document.getElementById('loginScreen').style.display='none';document.getElementById('app').style.display='flex';document.getElementById('cnName').textContent=D.cfg.cn;g('dashboard');},700);
 }
-function showLoginErr(msg) {
-  const err = document.getElementById('loginErr');
-  err.textContent = msg; err.style.display = 'block';
-}
-document.addEventListener('keydown', e => {
-  if (e.key === 'Enter' && document.getElementById('loginScreen').style.display === 'flex') doLogin();
-});
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&document.getElementById('loginScreen').style.display==='flex')doLogin();});
+function doLogout(){if(!confirm('¿Cerrar sesión?'))return;document.getElementById('app').style.display='none';document.getElementById('loginScreen').style.display='flex';document.getElementById('lp').value='';}
 
-function doLogout() {
-  if (!confirm('¿Cerrar sesión?')) return;
-  document.getElementById('appShell').style.display = 'none';
-  document.getElementById('loginScreen').style.display = 'flex';
-  document.getElementById('lp').value = '';
-  try { document.exitFullscreen?.(); } catch(e){}
+function g(sec){
+  D.s=sec;closeSb();
+  document.querySelectorAll('.ni').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.ni').forEach(el=>{if(el.getAttribute('onclick')?.includes(`'${sec}'`))el.classList.add('active');});
+  const T={dashboard:'Dashboard',agenda:'Agenda',mascotas:'Mascotas',clientes:'Clientes',vacunas:'Vacunas',caja:'Caja',inventario:'Inventario',config:'Configuración'};
+  const B={dashboard:'+ Nuevo turno',agenda:'+ Nuevo turno',mascotas:'+ Mascota',clientes:'+ Cliente',vacunas:'+ Vacuna',caja:'+ Movimiento',inventario:'+ Producto',config:''};
+  document.getElementById('tbTitle').textContent=T[sec];
+  const tb=document.getElementById('tbBtn');tb.textContent=B[sec]||'';tb.style.display=B[sec]?'inline-flex':'none';
+  const c=document.getElementById('cnt');c.style.animation='none';c.offsetHeight;c.style.animation='slideUp .3s both';
+  ({dashboard:rDash,agenda:rAgenda,mascotas:rMas,clientes:rCli,vacunas:rVac,caja:rCaja,inventario:rInv,config:rCfg}[sec]||(() =>{}))();
 }
+function tbAct(){({dashboard:()=>oM('mT'),agenda:()=>oM('mT'),mascotas:()=>oM('mM'),clientes:()=>oM('mC'),vacunas:()=>oM('mV'),caja:()=>oM('mK'),inventario:()=>oM('mI')}[D.s]||(() =>{}))();}
 
-// ─── NAVIGATION ───
-function goTo(sec) {
-  APP.seccion = sec;
-  closeSidebar();
-  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(el => {
-    if (el.getAttribute('onclick')?.includes(sec)) el.classList.add('active');
-  });
-  const titles = {
-    dashboard:'Dashboard', agenda:'Agenda', mascotas:'Mascotas',
-    clientes:'Clientes', vacunas:'Vacunas', caja:'Caja',
-    inventario:'Inventario', config:'Configuración'
-  };
-  const btns = {
-    dashboard:'+ Nuevo turno', agenda:'+ Nuevo turno', mascotas:'+ Nueva mascota',
-    clientes:'+ Nuevo cliente', vacunas:'+ Registrar vacuna',
-    caja:'+ Movimiento', inventario:'+ Producto', config:''
-  };
-  document.getElementById('topbarTitle').textContent = titles[sec] || sec;
-  const tb = document.getElementById('topbarBtn');
-  tb.textContent = btns[sec] || '';
-  tb.style.display = btns[sec] ? 'inline-flex' : 'none';
-  const renders = {
-    dashboard: renderDashboard, agenda: renderAgenda,
-    mascotas: renderMascotas, clientes: renderClientes,
-    vacunas: renderVacunas, caja: renderCaja,
-    inventario: renderInventario, config: renderConfig
-  };
-  const content = document.getElementById('content');
-  content.style.animation = 'none';
-  content.offsetHeight;
-  content.style.animation = 'slideIn .3s both';
-  (renders[sec] || (() => { content.innerHTML = '<div class="empty"><div class="empty-icon">🚧</div><div class="empty-text">En construcción</div></div>'; }))();
-}
+function toggleSb(){document.getElementById('sb').classList.toggle('open');document.getElementById('ov').classList.toggle('open');}
+function closeSb(){document.getElementById('sb').classList.remove('open');document.getElementById('ov').classList.remove('open');}
 
-function topbarAction() {
-  const actions = {
-    dashboard: () => openModal('modalTurno'),
-    agenda: () => openModal('modalTurno'),
-    mascotas: () => openModal('modalMascota'),
-    clientes: () => openModal('modalCliente'),
-    vacunas: () => openModal('modalVacuna'),
-    caja: () => openModal('modalCaja'),
-    inventario: () => openModal('modalInventario'),
-  };
-  (actions[APP.seccion] || (() => {}))();
-}
-
-// ─── SIDEBAR ───
-function toggleSidebar() {
-  document.getElementById('sidebar').classList.toggle('open');
-  document.getElementById('sidebarOverlay').classList.toggle('open');
-}
-function closeSidebar() {
-  document.getElementById('sidebar').classList.remove('open');
-  document.getElementById('sidebarOverlay').classList.remove('open');
-}
-
-// ─── MODALS ───
-function openModal(id) {
-  // Populate selects
-  const mSel = document.getElementById('tMascota');
-  const vSel = document.getElementById('vMascota');
-  const dSel = document.getElementById('mDueno');
-  const cSel = document.getElementById('cajaCliente');
-  if (mSel) { mSel.innerHTML = '<option value="">Seleccionar mascota...</option>'; APP.mascotas.forEach(m => { mSel.innerHTML += `<option value="${m.id}">${m.especie} ${m.nombre}</option>`; }); }
-  if (vSel) { vSel.innerHTML = ''; APP.mascotas.forEach(m => { vSel.innerHTML += `<option value="${m.id}">${m.especie} ${m.nombre}</option>`; }); }
-  if (dSel) { dSel.innerHTML = '<option value="">Seleccionar dueño...</option>'; APP.clientes.forEach(c => { dSel.innerHTML += `<option value="${c.id}">${c.nombre}</option>`; }); }
-  if (cSel) { cSel.innerHTML = '<option value="">Sin especificar</option>'; APP.clientes.forEach(c => { cSel.innerHTML += `<option value="${c.id}">${c.nombre}</option>`; }); }
-  // Set dates
-  const fd = document.getElementById('tFecha'); if(fd) fd.value = hoy;
-  const vfd = document.getElementById('vFecha'); if(vfd) vfd.value = hoy;
-  const cafd = document.getElementById('cajaFecha'); if(cafd) cafd.value = hoy;
+function oM(id){
+  const ms=document.getElementById('tMas');if(ms){ms.innerHTML='<option value="">Seleccionar...</option>';D.M.forEach(m=>ms.innerHTML+=`<option value="${m.id}">${m.e} ${m.n}</option>`);}
+  const vm=document.getElementById('vMas');if(vm){vm.innerHTML='';D.M.forEach(m=>vm.innerHTML+=`<option value="${m.id}">${m.e} ${m.n}</option>`);}
+  const md=document.getElementById('mDue');if(md){md.innerHTML='<option value="">Seleccionar...</option>';D.C.forEach(c=>md.innerHTML+=`<option value="${c.id}">${c.n}</option>`);}
+  const kc=document.getElementById('kCli');if(kc){kc.innerHTML='<option value="">Sin especificar</option>';D.C.forEach(c=>kc.innerHTML+=`<option value="${c.id}">${c.n}</option>`);}
+  const sd=(eid,v)=>{const el=document.getElementById(eid);if(el)el.value=v;};
+  sd('tFec',HOY);sd('vFec',HOY);sd('kFec',HOY);
   document.getElementById(id).classList.add('open');
 }
-function closeModal(id) { document.getElementById(id).classList.remove('open'); }
-document.querySelectorAll('.modal-overlay').forEach(o => {
-  o.addEventListener('click', e => { if(e.target === o) o.classList.remove('open'); });
-});
+function cM(id){document.getElementById(id).classList.remove('open');}
+document.querySelectorAll('.mo').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');}));
 
-// ─── HELPERS ───
-function getMascota(id) { return APP.mascotas.find(m=>m.id===id)||{}; }
-function getCliente(id) { return APP.clientes.find(c=>c.id===id)||{}; }
-function fmt(n) { return new Intl.NumberFormat('es-PY').format(n); }
-function diasRestantes(fecha) {
-  const d = new Date(fecha) - new Date();
-  return Math.ceil(d/86400000);
-}
-function uid() { return '_'+Math.random().toString(36).slice(2,8); }
-
-function vacunaBadge(proxima) {
-  const dias = diasRestantes(proxima);
-  if (dias < 0) return '<span class="badge badge-err">Vencida</span>';
-  if (dias <= 14) return `<span class="badge badge-warn">⚠ ${dias} días</span>`;
-  return '<span class="badge badge-ok">Al día</span>';
-}
-
-// ─── DASHBOARD ───
-function renderDashboard() {
-  const turnosHoy = APP.turno.filter(t => t.fecha === hoy);
-  const ingresosHoy = APP.caja.filter(m => m.fecha === hoy && m.tipo === 'ingreso').reduce((a,b) => a+b.monto, 0);
-  const mascotasTotal = APP.mascotas.length;
-  const vacVencidas = APP.vacunas.filter(v => diasRestantes(v.proxima) <= 14).length;
-  const stockBajo = APP.inventario.filter(i => i.stock <= i.min).length;
-
-  document.getElementById('content').innerHTML = `
-    <div class="stats-grid">
-      <div class="stat-card c-emerald">
-        <div class="stat-icon">📅</div>
-        <div class="stat-val">${turnosHoy.length}</div>
-        <div class="stat-label">Turnos hoy</div>
-        <div class="stat-delta up">▲ Agenda activa</div>
-      </div>
-      <div class="stat-card c-gold">
-        <div class="stat-icon">💰</div>
-        <div class="stat-val">₲ ${fmt(ingresosHoy)}</div>
-        <div class="stat-label">Ingresos hoy</div>
-        <div class="stat-delta up">▲ Del día</div>
-      </div>
-      <div class="stat-card c-blue">
-        <div class="stat-icon">🐾</div>
-        <div class="stat-val">${mascotasTotal}</div>
-        <div class="stat-label">Mascotas</div>
-        <div class="stat-delta up">Total registradas</div>
-      </div>
-      <div class="stat-card c-rose">
-        <div class="stat-icon">💉</div>
-        <div class="stat-val">${vacVencidas}</div>
-        <div class="stat-label">Vacunas urgentes</div>
-        <div class="stat-delta ${vacVencidas>0?'down':'up'}">${vacVencidas>0?'⚠ Atención requerida':'✓ Sin urgencias'}</div>
-      </div>
+// DASHBOARD
+function rDash(){
+  const h=D.T.filter(t=>t.f===HOY);
+  const ing=D.K.filter(m=>m.f===HOY&&m.t==='ingreso').reduce((a,b)=>a+b.mo,0);
+  const vu=D.V.filter(v=>dias(v.p)<=14).length;
+  document.getElementById('cnt').innerHTML=`
+  <div class="sg">
+    <div class="sc"><div class="sc-top"><div class="sc-ico" style="background:var(--green-bg)">📅</div><span class="sc-pill" style="background:var(--green-bg);color:var(--green)">Hoy</span></div><div class="sc-body"><div class="sc-val">${h.length}</div><div class="sc-lbl">Turnos del día</div></div></div>
+    <div class="sc"><div class="sc-top"><div class="sc-ico" style="background:var(--amber-bg)">💰</div><span class="sc-pill" style="background:var(--green-bg);color:var(--green)">↑ Hoy</span></div><div class="sc-body"><div class="sc-val sc-val-sm">₲ ${fmt(ing)}</div><div class="sc-lbl">Ingresos hoy</div></div></div>
+    <div class="sc"><div class="sc-top"><div class="sc-ico" style="background:var(--blue-bg)">🐾</div><span class="sc-pill" style="background:var(--bg2);color:var(--muted)">Total</span></div><div class="sc-body"><div class="sc-val">${D.M.length}</div><div class="sc-lbl">Mascotas</div></div></div>
+    <div class="sc"><div class="sc-top"><div class="sc-ico" style="background:var(--red-bg)">💉</div><span class="sc-pill" style="background:${vu>0?'var(--red-bg)':'var(--green-bg)'};color:${vu>0?'var(--red)':'var(--green)'}">${vu>0?'⚠ Urgente':'✓ OK'}</span></div><div class="sc-body"><div class="sc-val">${vu}</div><div class="sc-lbl">Vacunas urgentes</div></div></div>
+  </div>
+  <div class="gm">
+    <div class="panel"><div class="ph"><div class="pt">📅 Agenda de hoy</div><button class="btn btn-g btn-sm" onclick="g('agenda')">Ver todo →</button></div>
+    ${h.length===0?'<div class="empty"><div class="ei">📅</div><div class="et">Sin turnos para hoy</div></div>':h.sort((a,b)=>a.h.localeCompare(b.h)).map(t=>{const m=gM(t.m);const c=gC(m.d);return`<div class="ar"><div class="at">${t.h}</div><div class="al ${t.e==='Confirmado'?'g':'a'}"></div><div class="ai"><div class="ap">${m.e||'🐾'} ${m.n||'?'}</div><div class="as">${c.n||'—'} · ${t.mo}</div></div><span class="badge ${t.e==='Confirmado'?'bg-g':t.e==='En espera'?'bg-a':'bg-x'}">${t.e}</span></div>`;}).join('')}
     </div>
-
-    <div class="grid-3">
-      <div class="panel">
-        <div class="panel-header">
-          <div class="panel-title">📅 Agenda de hoy</div>
-          <button class="btn btn-ghost btn-sm" onclick="goTo('agenda')">Ver todo →</button>
-        </div>
-        <div>
-          ${turnosHoy.length === 0 ? '<div class="empty"><div class="empty-icon">📅</div><div class="empty-text">No hay turnos hoy</div></div>' :
-            turnosHoy.map(t => {
-              const m = getMascota(t.mascota);
-              const c = getCliente(m.dueno);
-              return `
-              <div class="agenda-row" onclick="goTo('agenda')">
-                <div class="agenda-hour">${t.hora}</div>
-                <div class="agenda-pet-wrap">
-                  <div class="agenda-pet-name">${m.especie||'🐾'} ${m.nombre||'Mascota'}</div>
-                  <div class="agenda-pet-detail">${c.nombre||''} · ${t.motivo}</div>
-                </div>
-                <span class="badge ${t.estado==='Confirmado'?'badge-ok':t.estado==='En espera'?'badge-warn':'badge-muted'}">${t.estado}</span>
-              </div>`}).join('')}
-        </div>
-      </div>
-
-      <div style="display:flex;flex-direction:column;gap:16px;">
-        <div class="panel">
-          <div class="panel-header">
-            <div class="panel-title">💉 Vacunas urgentes</div>
-          </div>
-          <div class="panel-body" style="padding:12px 16px;">
-            ${APP.vacunas.filter(v=>diasRestantes(v.proxima)<=30).map(v => {
-              const m = getMascota(v.mascota);
-              return `<div class="vac-row">
-                <div>
-                  <div class="vac-name">${m.nombre||'?'} · ${v.nombre}</div>
-                  <div class="vac-date">Vence: ${v.proxima}</div>
-                </div>
-                ${vacunaBadge(v.proxima)}
-              </div>`;
-            }).join('') || '<div class="empty" style="padding:20px"><div class="empty-text">Sin urgencias 🎉</div></div>'}
-          </div>
-        </div>
-
-        <div class="panel">
-          <div class="panel-header">
-            <div class="panel-title">📦 Stock bajo</div>
-          </div>
-          <div class="panel-body" style="padding:12px 16px;">
-            ${APP.inventario.filter(i=>i.stock<=i.min).map(i => `
-              <div class="vac-row">
-                <div>
-                  <div class="vac-name">${i.nombre}</div>
-                  <div class="vac-date">Stock: ${i.stock} (mín: ${i.min})</div>
-                </div>
-                <span class="badge badge-err">⚠ Bajo</span>
-              </div>`).join('') || '<div class="empty" style="padding:20px"><div class="empty-text">Stock OK ✓</div></div>'}
-          </div>
-        </div>
-      </div>
-    </div>`;
-}
-
-// ─── AGENDA ───
-function renderAgenda() {
-  const turnosHoy = APP.turno.filter(t => t.fecha === hoy).sort((a,b) => a.hora.localeCompare(b.hora));
-  document.getElementById('content').innerHTML = `
-    <div class="panel">
-      <div class="panel-header">
-        <div class="panel-title">Turnos de hoy — ${new Date().toLocaleDateString('es-PY',{weekday:'long',day:'numeric',month:'long'})}</div>
-        <button class="btn btn-primary btn-sm" onclick="openModal('modalTurno')">+ Nuevo turno</button>
-      </div>
-      <div>
-        ${turnosHoy.length === 0 ? '<div class="empty"><div class="empty-icon">📅</div><div class="empty-text">No hay turnos para hoy<br><small>Hacé clic en "+ Nuevo turno" para agregar</small></div></div>' :
-          turnosHoy.map(t => {
-            const m = getMascota(t.mascota);
-            const c = getCliente(m.dueno);
-            return `
-            <div class="agenda-row">
-              <div class="agenda-hour">${t.hora}</div>
-              <div class="agenda-pet-wrap">
-                <div class="agenda-pet-name">${m.especie||'🐾'} ${m.nombre||'Mascota'}</div>
-                <div class="agenda-pet-detail">${c.nombre||'Sin dueño'} · ${t.motivo}</div>
-              </div>
-              <div class="agenda-actions">
-                <span class="badge ${t.estado==='Confirmado'?'badge-ok':t.estado==='En espera'?'badge-warn':'badge-muted'}">${t.estado}</span>
-                <button class="btn-icon" onclick="cambiarEstado('${t.id}')" title="Cambiar estado">↺</button>
-                ${c.tel ? `<button class="btn-icon" onclick="whatsapp('${c.tel}','${m.nombre}')" title="WhatsApp">💬</button>` : ''}
-                <button class="btn-icon" onclick="eliminarTurno('${t.id}')" style="color:var(--rose)">✕</button>
-              </div>
-            </div>`;
-          }).join('')}
-      </div>
-    </div>`;
-}
-
-// ─── MASCOTAS ───
-function renderMascotas() {
-  document.getElementById('content').innerHTML = `
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;">
-      ${APP.mascotas.length === 0 ? '<div class="empty" style="grid-column:1/-1"><div class="empty-icon">🐾</div><div class="empty-text">No hay mascotas registradas</div></div>' :
-        APP.mascotas.map(m => {
-          const c = getCliente(m.dueno);
-          const vacsMascota = APP.vacunas.filter(v => v.mascota === m.id);
-          const vacUrgentes = vacsMascota.filter(v => diasRestantes(v.proxima) <= 14).length;
-          return `
-          <div class="panel" style="cursor:pointer;" onclick="verMascota('${m.id}')">
-            <div class="panel-body">
-              <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px;">
-                <div class="pet-avatar" style="width:52px;height:52px;font-size:26px;">${m.especie.split(' ')[0]}</div>
-                <div>
-                  <div style="font-family:'Syne',sans-serif;font-size:17px;font-weight:700;">${m.nombre}</div>
-                  <div style="font-size:12px;color:var(--muted);">${m.raza} · ${m.sexo}</div>
-                </div>
-              </div>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
-                <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;">Peso</div><div style="font-size:14px;">${m.peso} kg</div></div>
-                <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;">Dueño</div><div style="font-size:13px;">${c.nombre||'—'}</div></div>
-              </div>
-              <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                ${vacUrgentes > 0 ? `<span class="badge badge-warn">💉 ${vacUrgentes} vacuna${vacUrgentes>1?'s':''} urgente${vacUrgentes>1?'s':''}</span>` : '<span class="badge badge-ok">💉 Vacunas al día</span>'}
-                ${m.alergias && m.alergias !== 'Ninguna' ? '<span class="badge badge-err">⚠ Alergias</span>' : ''}
-              </div>
-            </div>
-          </div>`;
-        }).join('')}
-    </div>`;
-}
-
-function verMascota(id) {
-  const m = getMascota(id);
-  const c = getCliente(m.dueno);
-  const vacsMascota = APP.vacunas.filter(v => v.mascota === id);
-  const turnosMascota = APP.turno.filter(t => t.mascota === id);
-  document.getElementById('content').innerHTML = `
-    <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px;">
-      <button class="btn btn-ghost btn-sm" onclick="renderMascotas()">← Volver</button>
-      <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:700;">${m.especie} ${m.nombre}</div>
+    <div style="display:flex;flex-direction:column;gap:16px;">
+      <div class="panel"><div class="ph"><div class="pt">💉 Vacunas próximas</div></div><div style="padding:0 22px;">${D.V.filter(v=>dias(v.p)<=30).map(v=>{const m=gM(v.m);return`<div class="vi"><div><div class="vn">${m.n||'?'} · ${v.n}</div><div class="vd">Vence: ${v.p}</div></div>${vb(v.p)}</div>`;}).join('')||'<div class="empty" style="padding:20px"><div class="et">Sin urgencias 🎉</div></div>'}</div></div>
+      <div class="panel"><div class="ph"><div class="pt">📦 Stock bajo</div></div><div style="padding:0 22px;">${D.I.filter(i=>i.s<=i.mi).map(i=>`<div class="vi"><div><div class="vn">${i.n}</div><div class="vd">Stock: ${i.s} · Mín: ${i.mi}</div></div><span class="badge bg-r">⚠ Bajo</span></div>`).join('')||'<div class="empty" style="padding:20px"><div class="et">Stock OK ✓</div></div>'}</div></div>
     </div>
-    <div class="grid-2">
-      <div class="panel">
-        <div class="panel-header"><div class="panel-title">🐾 Datos de la mascota</div></div>
-        <div class="panel-body">
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
-            ${[['Raza',m.raza],['Sexo',m.sexo],['Peso',m.peso+' kg'],['Nacimiento',m.nacimiento],['Color',m.color||'—'],['Dueño',c.nombre||'—'],['Tel. dueño',c.tel||'—'],['Alergias',m.alergias||'Ninguna']].map(([l,v])=>`
-            <div><div class="field-label">${l}</div><div style="font-size:14px;">${v}</div></div>`).join('')}
-          </div>
-        </div>
-      </div>
-      <div class="panel">
-        <div class="panel-header">
-          <div class="panel-title">💉 Vacunas</div>
-          <button class="btn btn-ghost btn-sm" onclick="openModal('modalVacuna')">+ Agregar</button>
-        </div>
-        <div class="panel-body" style="padding:0;">
-          ${vacsMascota.length === 0 ? '<div class="empty"><div class="empty-text">Sin vacunas registradas</div></div>' :
-            vacsMascota.map(v => `
-            <div class="vac-row" style="padding:12px 20px;">
-              <div>
-                <div style="font-size:13px;font-weight:500;">${v.nombre}</div>
-                <div style="font-size:11px;color:var(--muted);">Aplicada: ${v.fecha} · Próxima: ${v.proxima}</div>
-                ${v.lote ? `<div style="font-size:10px;color:var(--muted);">${v.lote}</div>` : ''}
-              </div>
-              ${vacunaBadge(v.proxima)}
-            </div>`).join('')}
-        </div>
-      </div>
+  </div>`;
+}
+
+// AGENDA
+function rAgenda(){
+  const h=D.T.filter(t=>t.f===HOY).sort((a,b)=>a.h.localeCompare(b.h));
+  document.getElementById('cnt').innerHTML=`<div class="panel"><div class="ph"><div class="pt">Turnos de hoy</div><button class="btn btn-p btn-sm" onclick="oM('mT')">+ Nuevo turno</button></div>
+  ${h.length===0?'<div class="empty"><div class="ei">📅</div><div class="et">No hay turnos para hoy</div></div>':h.map(t=>{const m=gM(t.m);const c=gC(m.d);return`<div class="ar"><div class="at">${t.h}</div><div class="al ${t.e==='Confirmado'?'g':'a'}"></div><div class="ai"><div class="ap">${m.e||'🐾'} ${m.n||'?'}</div><div class="as">${c.n||'Sin dueño'} · ${t.mo}</div></div><div class="aa"><span class="badge ${t.e==='Confirmado'?'bg-g':t.e==='En espera'?'bg-a':t.e==='En consulta'?'bg-b':'bg-x'}">${t.e}</span><button class="ic" onclick="chEst('${t.id}')" title="Cambiar estado">↺</button>${c.t?`<button class="ic" onclick="wa('${c.t}','${m.n}')">💬</button>`:''}<button class="ic d" onclick="dT('${t.id}')">✕</button></div></div>`;}).join('')}
+  </div>`;
+}
+
+// MASCOTAS
+function rMas(){
+  document.getElementById('cnt').innerHTML=`<div class="pg">${D.M.length===0?'<div class="empty" style="grid-column:1/-1"><div class="ei">🐾</div><div class="et">No hay mascotas</div></div>':D.M.map(m=>{const c=gC(m.d);const vu=D.V.filter(v=>v.m===m.id&&dias(v.p)<=14).length;return`<div class="pc" onclick="vMas('${m.id}')"><div style="display:flex;align-items:center;gap:14px;"><div class="pav">${m.e.split(' ')[0]}</div><div><div class="pn">${m.n}</div><div class="pm">${m.r} · ${m.s}</div></div></div><div class="pst"><div><div class="psl">Peso</div><div class="psv">${m.p} kg</div></div><div><div class="psl">Dueño</div><div class="psv" style="font-size:12px">${c.n||'—'}</div></div></div><div style="display:flex;gap:6px;flex-wrap:wrap;">${vu>0?`<span class="badge bg-a">💉 ${vu} urgente</span>`:'<span class="badge bg-g">💉 Al día</span>'}${m.a&&m.a!=='Ninguna'?'<span class="badge bg-r">⚠ Alergia</span>':''}</div></div>`;}).join('')}</div>`;
+}
+
+function vMas(id){
+  const m=gM(id);const c=gC(m.d);
+  const vs=D.V.filter(v=>v.m===id);const ts=D.T.filter(t=>t.m===id);
+  document.getElementById('cnt').innerHTML=`<div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;"><button class="btn btn-g btn-sm" onclick="rMas()">← Volver</button><div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:700;">${m.e} ${m.n}</div></div>
+  <div class="g2" style="margin-bottom:20px;">
+    <div class="panel"><div class="ph"><div class="pt">🐾 Datos</div></div><div class="pb"><div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">${[['Raza',m.r],['Sexo',m.s],['Peso',m.p+' kg'],['Nacimiento',m.b],['Dueño',c.n||'—'],['WhatsApp',c.t||'—'],['Alergias',m.a||'Ninguna']].map(([l,v])=>`<div><div class="fdl">${l}</div><div style="font-size:14px;font-weight:500;margin-top:4px;">${v}</div></div>`).join('')}</div></div></div>
+    <div class="panel"><div class="ph"><div class="pt">💉 Vacunas</div><button class="btn btn-g btn-sm" onclick="oM('mV')">+ Agregar</button></div><div style="padding:0 22px;">${vs.length===0?'<div class="empty" style="padding:22px"><div class="et">Sin vacunas</div></div>':vs.map(v=>`<div class="vi"><div><div class="vn">${v.n}</div><div class="vd">Aplicada: ${v.f} · Próxima: ${v.p}</div></div>${vb(v.p)}</div>`).join('')}</div></div>
+  </div>
+  <div class="panel"><div class="ph"><div class="pt">📋 Historial</div></div>
+  ${ts.length===0?'<div class="empty"><div class="et">Sin consultas</div></div>':`<div class="tw"><table><thead><tr><th>Fecha</th><th>Hora</th><th>Motivo</th><th>Estado</th></tr></thead><tbody>${ts.map(t=>`<tr><td>${t.f}</td><td>${t.h}</td><td class="tb">${t.mo}</td><td><span class="badge bg-g">${t.e}</span></td></tr>`).join('')}</tbody></table></div>`}
+  </div>`;
+}
+
+// CLIENTES
+function rCli(){
+  document.getElementById('cnt').innerHTML=`<div class="panel"><div class="ph"><div class="pt">Clientes registrados</div><button class="btn btn-p btn-sm" onclick="oM('mC')">+ Nuevo cliente</button></div>
+  ${D.C.length===0?'<div class="empty"><div class="ei">👥</div><div class="et">No hay clientes</div></div>':`<div class="tw"><table><thead><tr><th>Nombre</th><th>WhatsApp</th><th>Email</th><th>Mascotas</th><th></th></tr></thead><tbody>${D.C.map(c=>{const ms=D.M.filter(m=>m.d===c.id);return`<tr><td class="tb">${c.n}</td><td>${c.t}</td><td class="td">${c.e||'—'}</td><td>${ms.map(m=>`<span class="badge bg-b" style="margin:2px">${m.e.split(' ')[0]} ${m.n}</span>`).join('')||'—'}</td><td><div style="display:flex;gap:6px">${c.t?`<button class="ic" onclick="wa('${c.t}','')">💬</button>`:''}<button class="ic d" onclick="dC('${c.id}')">✕</button></div></td></tr>`;}).join('')}</tbody></table></div>`}
+  </div>`;
+}
+
+// VACUNAS
+function rVac(){
+  const urg=D.V.filter(v=>dias(v.p)<=14);
+  document.getElementById('cnt').innerHTML=`${urg.length>0?`<div class="alert al-a">⚠ <strong>${urg.length} vacuna${urg.length>1?'s':''}</strong> requieren atención en los próximos 14 días</div>`:''}
+  <div class="panel"><div class="ph"><div class="pt">💉 Control de vacunas</div><button class="btn btn-p btn-sm" onclick="oM('mV')">+ Registrar</button></div>
+  ${D.V.length===0?'<div class="empty"><div class="ei">💉</div><div class="et">No hay vacunas</div></div>':`<div class="tw"><table><thead><tr><th>Mascota</th><th>Dueño</th><th>Vacuna</th><th>Aplicada</th><th>Próxima dosis</th><th>Estado</th><th>Acción</th></tr></thead><tbody>${D.V.map(v=>{const m=gM(v.m);const c=gC(m.d);return`<tr><td class="tb">${m.e||''} ${m.n||'?'}</td><td>${c.n||'—'}</td><td>${v.n}</td><td class="td">${v.f}</td><td class="td">${v.p}</td><td>${vb(v.p)}</td><td>${c.t?`<button class="ic" onclick="waV('${c.t}','${m.n}','${v.n}','${v.p}')">💬</button>`:'—'}</td></tr>`;}).join('')}</tbody></table></div>`}
+  </div>`;
+}
+
+// CAJA
+function rCaja(){
+  const ing=D.K.filter(m=>m.f===HOY&&m.t==='ingreso').reduce((a,b)=>a+b.mo,0);
+  const eg=D.K.filter(m=>m.f===HOY&&m.t==='egreso').reduce((a,b)=>a+b.mo,0);
+  document.getElementById('cnt').innerHTML=`<div class="ct">
+    <div class="cc ing"><div class="cl">Ingresos hoy</div><div class="cv" style="color:var(--green)">₲ ${fmt(ing)}</div></div>
+    <div class="cc eg"><div class="cl">Egresos hoy</div><div class="cv" style="color:var(--red)">₲ ${fmt(eg)}</div></div>
+    <div class="cc net"><div class="cl">Neto del día</div><div class="cv" style="color:${ing-eg>=0?'var(--green)':'var(--red)'}">₲ ${fmt(ing-eg)}</div></div>
+  </div>
+  <div class="panel"><div class="ph"><div class="pt">Movimientos de hoy</div><button class="btn btn-p btn-sm" onclick="oM('mK')">+ Movimiento</button></div>
+  ${D.K.filter(m=>m.f===HOY).length===0?'<div class="empty"><div class="ei">💰</div><div class="et">Sin movimientos hoy</div></div>':`<div class="tw"><table><thead><tr><th>Tipo</th><th>Concepto</th><th>Cliente</th><th>Nota</th><th>Monto</th><th></th></tr></thead><tbody>${D.K.filter(m=>m.f===HOY).map(m=>{const c=gC(m.cl);return`<tr><td><span class="badge ${m.t==='ingreso'?'bg-g':'bg-r'}">${m.t==='ingreso'?'↑ Ingreso':'↓ Egreso'}</span></td><td class="tb">${m.c}</td><td>${c.n||'—'}</td><td class="td">${m.no||'—'}</td><td style="font-weight:700;color:${m.t==='ingreso'?'var(--green)':'var(--red)'};">${m.t==='ingreso'?'+':'-'} ₲ ${fmt(m.mo)}</td><td><button class="ic d" onclick="dK('${m.id}')">✕</button></td></tr>`;}).join('')}</tbody></table></div>`}
+  </div>`;
+}
+
+// INVENTARIO
+function rInv(){
+  const bajo=D.I.filter(i=>i.s<=i.mi);
+  document.getElementById('cnt').innerHTML=`${bajo.length>0?`<div class="alert al-r">⚠ <strong>${bajo.length} producto${bajo.length>1?'s':''}</strong> bajo del mínimo: ${bajo.map(i=>i.n).join(', ')}</div>`:''}
+  <div class="panel"><div class="ph"><div class="pt">📦 Inventario</div><button class="btn btn-p btn-sm" onclick="oM('mI')">+ Producto</button></div>
+  ${D.I.length===0?'<div class="empty"><div class="ei">📦</div><div class="et">No hay productos</div></div>':`<div class="tw"><table><thead><tr><th>Producto</th><th>Categoría</th><th>Stock</th><th>Mínimo</th><th>Precio venta</th><th>Estado</th><th></th></tr></thead><tbody>${D.I.map(i=>`<tr><td class="tb">${i.n}</td><td><span class="badge bg-b">${i.c}</span></td><td style="font-weight:700;color:${i.s<=i.mi?'var(--red)':'var(--green)'};">${i.s}</td><td class="td">${i.mi}</td><td>₲ ${fmt(i.p)}</td><td>${i.s<=i.mi?'<span class="badge bg-r">⚠ Bajo</span>':'<span class="badge bg-g">✓ OK</span>'}</td><td><button class="ic d" onclick="dI('${i.id}')">✕</button></td></tr>`).join('')}</tbody></table></div>`}
+  </div>`;
+}
+
+// CONFIG
+function rCfg(){
+  document.getElementById('cnt').innerHTML=`<div style="max-width:560px;">
+    <div class="cfs"><div class="cft">🏥 Datos de la clínica</div>
+      <div class="fd"><label class="fdl">Nombre de la clínica</label><input class="fdi" id="cfCl" value="${D.cfg.cn}"></div>
+      <div class="fd"><label class="fdl">Veterinario principal</label><input class="fdi" id="cfVt" value="${D.cfg.vet}"></div>
+      <div class="fd"><label class="fdl">Teléfono / WhatsApp</label><input class="fdi" id="cfTl" placeholder="0981 000 000"></div>
+      <div class="fd"><label class="fdl">Dirección</label><input class="fdi" id="cfDr" placeholder="Av. España 1234, Asunción"></div>
     </div>
-    <div class="panel">
-      <div class="panel-header">
-        <div class="panel-title">📋 Historial de consultas</div>
-        <button class="btn btn-ghost btn-sm" onclick="openModal('modalTurno')">+ Nuevo turno</button>
-      </div>
-      ${turnosMascota.length === 0 ? '<div class="empty"><div class="empty-text">Sin consultas registradas</div></div>' :
-        `<table class="table"><thead><tr><th>Fecha</th><th>Hora</th><th>Motivo</th><th>Veterinario</th><th>Estado</th></tr></thead><tbody>
-        ${turnosMascota.map(t=>`<tr><td>${t.fecha}</td><td>${t.hora}</td><td>${t.motivo}</td><td>${t.vet}</td><td><span class="badge badge-ok">${t.estado}</span></td></tr>`).join('')}
-        </tbody></table>`}
-    </div>`;
-}
-
-// ─── CLIENTES ───
-function renderClientes() {
-  document.getElementById('content').innerHTML = `
-    <div class="panel">
-      <div class="panel-header">
-        <div class="panel-title">Clientes registrados</div>
-        <button class="btn btn-primary btn-sm" onclick="openModal('modalCliente')">+ Nuevo cliente</button>
-      </div>
-      ${APP.clientes.length === 0 ? '<div class="empty"><div class="empty-icon">👥</div><div class="empty-text">No hay clientes registrados</div></div>' :
-        `<table class="table"><thead><tr><th>Nombre</th><th>Teléfono</th><th>Email</th><th>Mascotas</th><th>Acciones</th></tr></thead><tbody>
-        ${APP.clientes.map(c => {
-          const mascs = APP.mascotas.filter(m => m.dueno === c.id);
-          return `<tr>
-            <td class="table-name">${c.nombre}</td>
-            <td>${c.tel}</td>
-            <td style="color:var(--muted)">${c.email||'—'}</td>
-            <td>${mascs.map(m=>`<span class="badge badge-blue">${m.especie.split(' ')[0]} ${m.nombre}</span>`).join(' ')||'—'}</td>
-            <td><div style="display:flex;gap:6px;">
-              ${c.tel?`<button class="btn-icon" onclick="whatsapp('${c.tel}','')" title="WhatsApp">💬</button>`:''}
-              <button class="btn-icon btn-danger" onclick="eliminarCliente('${c.id}')">✕</button>
-            </div></td>
-          </tr>`;
-        }).join('')}
-        </tbody></table>`}
-    </div>`;
-}
-
-// ─── VACUNAS ───
-function renderVacunas() {
-  const urgentes = APP.vacunas.filter(v => diasRestantes(v.proxima) <= 14);
-  const resto = APP.vacunas.filter(v => diasRestantes(v.proxima) > 14);
-  document.getElementById('content').innerHTML = `
-    ${urgentes.length > 0 ? `
-    <div class="panel" style="margin-bottom:20px;border-color:rgba(200,169,110,.3);">
-      <div class="panel-header" style="background:rgba(200,169,110,.05);">
-        <div class="panel-title" style="color:var(--gold);">⚠ Vacunas urgentes (${urgentes.length})</div>
-      </div>
-      <table class="table"><thead><tr><th>Mascota</th><th>Vacuna</th><th>Próxima dosis</th><th>Estado</th><th>WhatsApp</th></tr></thead><tbody>
-        ${urgentes.map(v => {
-          const m = getMascota(v.mascota);
-          const c = getCliente(m.dueno);
-          return `<tr><td class="table-name">${m.especie||''} ${m.nombre||'?'}</td><td>${v.nombre}</td><td>${v.proxima}</td><td>${vacunaBadge(v.proxima)}</td>
-          <td>${c.tel?`<button class="btn-icon" onclick="whatsappVacuna('${c.tel}','${m.nombre}','${v.nombre}','${v.proxima}')">💬 Avisar</button>`:'—'}</td></tr>`;
-        }).join('')}
-      </tbody></table>
-    </div>` : ''}
-    <div class="panel">
-      <div class="panel-header">
-        <div class="panel-title">💉 Todas las vacunas</div>
-        <button class="btn btn-primary btn-sm" onclick="openModal('modalVacuna')">+ Registrar</button>
-      </div>
-      ${APP.vacunas.length === 0 ? '<div class="empty"><div class="empty-icon">💉</div><div class="empty-text">No hay vacunas registradas</div></div>' :
-        `<table class="table"><thead><tr><th>Mascota</th><th>Dueño</th><th>Vacuna</th><th>Aplicada</th><th>Próxima</th><th>Estado</th></tr></thead><tbody>
-        ${resto.map(v=>{
-          const m=getMascota(v.mascota); const c=getCliente(m.dueno);
-          return `<tr><td class="table-name">${m.especie||''} ${m.nombre||'?'}</td><td>${c.nombre||'—'}</td><td>${v.nombre}</td><td>${v.fecha}</td><td>${v.proxima}</td><td>${vacunaBadge(v.proxima)}</td></tr>`;
-        }).join('')}
-        </tbody></table>`}
-    </div>`;
-}
-
-// ─── CAJA ───
-function renderCaja() {
-  const ingresos = APP.caja.filter(m=>m.fecha===hoy&&m.tipo==='ingreso').reduce((a,b)=>a+b.monto,0);
-  const egresos = APP.caja.filter(m=>m.fecha===hoy&&m.tipo==='egreso').reduce((a,b)=>a+b.monto,0);
-  document.getElementById('content').innerHTML = `
-    <div class="caja-total">
-      <div class="caja-card" style="border-color:rgba(46,204,113,.3);">
-        <div class="caja-val" style="color:var(--emerald);">₲ ${fmt(ingresos)}</div>
-        <div class="caja-label">Ingresos hoy</div>
-      </div>
-      <div class="caja-card" style="border-color:rgba(224,92,92,.3);">
-        <div class="caja-val" style="color:var(--rose);">₲ ${fmt(egresos)}</div>
-        <div class="caja-label">Egresos hoy</div>
-      </div>
-      <div class="caja-card">
-        <div class="caja-val" style="color:${ingresos-egresos>=0?'var(--emerald)':'var(--rose)'};">₲ ${fmt(ingresos-egresos)}</div>
-        <div class="caja-label">Neto del día</div>
-      </div>
+    <div class="cfs"><div class="cft">🕐 Horario de atención</div>
+      <div class="fr"><div class="fd"><label class="fdl">Apertura</label><input class="fdi" id="cfAp" type="time" value="08:00"></div><div class="fd"><label class="fdl">Cierre</label><input class="fdi" id="cfCi" type="time" value="18:00"></div></div>
     </div>
-    <div class="panel">
-      <div class="panel-header">
-        <div class="panel-title">Movimientos de hoy</div>
-        <button class="btn btn-primary btn-sm" onclick="openModal('modalCaja')">+ Movimiento</button>
-      </div>
-      ${APP.caja.filter(m=>m.fecha===hoy).length===0 ? '<div class="empty"><div class="empty-icon">💰</div><div class="empty-text">Sin movimientos hoy</div></div>' :
-        `<table class="table"><thead><tr><th>Tipo</th><th>Concepto</th><th>Cliente</th><th>Nota</th><th>Monto</th><th></th></tr></thead><tbody>
-        ${APP.caja.filter(m=>m.fecha===hoy).map(m=>{
-          const c=getCliente(m.cliente);
-          return `<tr>
-            <td><span class="badge ${m.tipo==='ingreso'?'badge-ok':'badge-err'}">${m.tipo==='ingreso'?'+ Ingreso':'- Egreso'}</span></td>
-            <td>${m.concepto}</td>
-            <td>${c.nombre||'—'}</td>
-            <td style="color:var(--muted)">${m.nota||'—'}</td>
-            <td style="font-family:'Syne',sans-serif;font-weight:700;color:${m.tipo==='ingreso'?'var(--emerald)':'var(--rose)'};">${m.tipo==='ingreso'?'+':'-'} ₲ ${fmt(m.monto)}</td>
-            <td><button class="btn-icon btn-danger" onclick="eliminarMovimiento('${m.id}')">✕</button></td>
-          </tr>`;
-        }).join('')}
-        </tbody></table>`}
-    </div>`;
+    <button class="btn btn-p" onclick="gCfg()">Guardar cambios</button>
+  </div>`;
 }
 
-// ─── INVENTARIO ───
-function renderInventario() {
-  const stockBajo = APP.inventario.filter(i=>i.stock<=i.min);
-  document.getElementById('content').innerHTML = `
-    ${stockBajo.length>0?`
-    <div style="background:rgba(224,92,92,.08);border:1px solid rgba(224,92,92,.2);border-radius:8px;padding:14px 18px;margin-bottom:20px;font-size:13px;color:var(--rose);">
-      ⚠ <strong>${stockBajo.length} producto${stockBajo.length>1?'s':''}</strong> con stock bajo del mínimo: ${stockBajo.map(i=>i.nombre).join(', ')}
-    </div>`:''}
-    <div class="panel">
-      <div class="panel-header">
-        <div class="panel-title">📦 Inventario</div>
-        <button class="btn btn-primary btn-sm" onclick="openModal('modalInventario')">+ Producto</button>
-      </div>
-      ${APP.inventario.length===0?'<div class="empty"><div class="empty-icon">📦</div><div class="empty-text">No hay productos registrados</div></div>':
-        `<table class="table"><thead><tr><th>Producto</th><th>Categoría</th><th>Stock</th><th>Mínimo</th><th>Precio</th><th>Estado</th><th></th></tr></thead><tbody>
-        ${APP.inventario.map(i=>`<tr>
-          <td class="table-name">${i.nombre}</td>
-          <td><span class="badge badge-blue">${i.cat}</span></td>
-          <td style="font-family:'Syne',sans-serif;font-weight:700;color:${i.stock<=i.min?'var(--rose)':'var(--emerald)'};">${i.stock}</td>
-          <td style="color:var(--muted)">${i.min}</td>
-          <td>₲ ${fmt(i.precio)}</td>
-          <td>${i.stock<=i.min?'<span class="badge badge-err">⚠ Bajo</span>':'<span class="badge badge-ok">OK</span>'}</td>
-          <td><button class="btn-icon btn-danger" onclick="eliminarProducto('${i.id}')">✕</button></td>
-        </tr>`).join('')}
-        </tbody></table>`}
-    </div>`;
-}
+// CRUD
+function gTurno(){const t={id:uid(),f:document.getElementById('tFec').value,h:document.getElementById('tHor').value,m:document.getElementById('tMas').value,mo:document.getElementById('tMot').value,e:'Confirmado'};if(!t.f||!t.h||!t.m){alert('Completá fecha, hora y mascota');return;}D.T.push(t);cM('mT');g(D.s);}
+function gMasc(){const m={id:uid(),n:document.getElementById('mNom').value,e:document.getElementById('mEsp').value,r:document.getElementById('mRaz').value,s:document.getElementById('mSex').value,b:document.getElementById('mNac').value,p:parseFloat(document.getElementById('mPes').value)||0,d:document.getElementById('mDue').value,a:document.getElementById('mAle').value};if(!m.n){alert('Ingresá el nombre');return;}D.M.push(m);cM('mM');g(D.s);}
+function gCli(){const c={id:uid(),n:document.getElementById('cNom').value,t:document.getElementById('cTel').value,e:document.getElementById('cEma').value,d:document.getElementById('cDir').value};if(!c.n){alert('Ingresá el nombre');return;}D.C.push(c);cM('mC');g(D.s);}
+function gVac(){const v={id:uid(),m:document.getElementById('vMas').value,n:document.getElementById('vNom').value,f:document.getElementById('vFec').value,p:document.getElementById('vPro').value,l:document.getElementById('vLot').value};if(!v.m||!v.f||!v.p){alert('Completá todos los campos');return;}D.V.push(v);cM('mV');g(D.s);}
+function gMov(){const m={id:uid(),f:document.getElementById('kFec').value,t:document.getElementById('kTip').value,c:document.getElementById('kCon').value,mo:parseInt(document.getElementById('kMon').value)||0,cl:document.getElementById('kCli').value,no:document.getElementById('kNot').value};if(!m.mo){alert('Ingresá el monto');return;}D.K.push(m);cM('mK');g(D.s);}
+function gProd(){const i={id:uid(),n:document.getElementById('iNom').value,c:document.getElementById('iCat').value,s:parseInt(document.getElementById('iSto').value)||0,mi:parseInt(document.getElementById('iMin').value)||0,p:parseInt(document.getElementById('iPre').value)||0,pr:document.getElementById('iPro').value};if(!i.n){alert('Ingresá el nombre');return;}D.I.push(i);cM('mI');g(D.s);}
+function gCfg(){D.cfg.cn=document.getElementById('cfCl').value;D.cfg.vet=document.getElementById('cfVt').value;document.getElementById('cnName').textContent=D.cfg.cn;alert('✓ Configuración guardada');}
 
-// ─── CONFIG ───
-function renderConfig() {
-  document.getElementById('content').innerHTML = `
-    <div class="panel" style="max-width:560px;">
-      <div class="panel-header"><div class="panel-title">⚙️ Configuración de la clínica</div></div>
-      <div class="panel-body">
-        <div class="field">
-          <label class="field-label">Nombre de la clínica</label>
-          <input class="field-input" id="cfgClinica" value="${APP.config.clinica}">
-        </div>
-        <div class="field">
-          <label class="field-label">Veterinario principal</label>
-          <input class="field-input" id="cfgVet" value="${APP.config.veterinario}">
-        </div>
-        <div class="field">
-          <label class="field-label">Teléfono / WhatsApp</label>
-          <input class="field-input" id="cfgTel" placeholder="0981 000 000">
-        </div>
-        <div class="field">
-          <label class="field-label">Horario de atención</label>
-          <div class="field-row">
-            <input class="field-input" id="cfgApertura" type="time" value="08:00">
-            <input class="field-input" id="cfgCierre" type="time" value="18:00">
-          </div>
-        </div>
-        <button class="btn btn-primary" onclick="guardarConfig()">Guardar cambios</button>
-      </div>
-    </div>`;
-}
-
-// ─── SAVE ACTIONS ───
-function guardarTurno() {
-  const t = {
-    id: uid(),
-    fecha: document.getElementById('tFecha').value,
-    hora: document.getElementById('tHora').value,
-    mascota: document.getElementById('tMascota').value,
-    motivo: document.getElementById('tMotivo').value,
-    vet: document.getElementById('tVet').value,
-    notas: document.getElementById('tNotas').value,
-    estado: 'Confirmado'
-  };
-  if (!t.fecha || !t.hora || !t.mascota) { alert('Completá fecha, hora y mascota'); return; }
-  APP.turno.push(t);
-  closeModal('modalTurno');
-  goTo(APP.seccion);
-}
-
-function guardarMascota() {
-  const m = {
-    id: uid(),
-    nombre: document.getElementById('mNombre').value,
-    especie: document.getElementById('mEspecie').value,
-    raza: document.getElementById('mRaza').value,
-    sexo: document.getElementById('mSexo').value,
-    nacimiento: document.getElementById('mNacimiento').value,
-    peso: parseFloat(document.getElementById('mPeso').value)||0,
-    dueno: document.getElementById('mDueno').value,
-    alergias: document.getElementById('mAlergias').value,
-    color: document.getElementById('mColor').value
-  };
-  if (!m.nombre) { alert('Ingresá el nombre de la mascota'); return; }
-  APP.mascotas.push(m);
-  closeModal('modalMascota');
-  goTo(APP.seccion);
-}
-
-function guardarCliente() {
-  const c = {
-    id: uid(),
-    nombre: document.getElementById('cNombre').value,
-    tel: document.getElementById('cTel').value,
-    email: document.getElementById('cEmail').value,
-    dir: document.getElementById('cDir').value
-  };
-  if (!c.nombre) { alert('Ingresá el nombre del cliente'); return; }
-  APP.clientes.push(c);
-  closeModal('modalCliente');
-  goTo(APP.seccion);
-}
-
-function guardarVacuna() {
-  const v = {
-    id: uid(),
-    mascota: document.getElementById('vMascota').value,
-    nombre: document.getElementById('vNombre').value,
-    fecha: document.getElementById('vFecha').value,
-    proxima: document.getElementById('vProxima').value,
-    lote: document.getElementById('vLote').value,
-    notas: document.getElementById('vNotas').value
-  };
-  if (!v.mascota || !v.fecha || !v.proxima) { alert('Completá todos los campos requeridos'); return; }
-  APP.vacunas.push(v);
-  closeModal('modalVacuna');
-  goTo(APP.seccion);
-}
-
-function guardarMovimiento() {
-  const m = {
-    id: uid(),
-    fecha: document.getElementById('cajaFecha').value,
-    tipo: document.getElementById('cajaTipo').value,
-    concepto: document.getElementById('cajaConcepto').value,
-    monto: parseInt(document.getElementById('cajaMonto').value)||0,
-    cliente: document.getElementById('cajaCliente').value,
-    nota: document.getElementById('cajaNota').value
-  };
-  if (!m.monto) { alert('Ingresá el monto'); return; }
-  APP.caja.push(m);
-  closeModal('modalCaja');
-  goTo(APP.seccion);
-}
-
-function guardarProducto() {
-  const i = {
-    id: uid(),
-    nombre: document.getElementById('invNombre').value,
-    cat: document.getElementById('invCat').value,
-    stock: parseInt(document.getElementById('invStock').value)||0,
-    min: parseInt(document.getElementById('invMin').value)||0,
-    precio: parseInt(document.getElementById('invPrecio').value)||0,
-    prov: document.getElementById('invProv').value
-  };
-  if (!i.nombre) { alert('Ingresá el nombre del producto'); return; }
-  APP.inventario.push(i);
-  closeModal('modalInventario');
-  goTo(APP.seccion);
-}
-
-function guardarConfig() {
-  APP.config.clinica = document.getElementById('cfgClinica').value;
-  APP.config.veterinario = document.getElementById('cfgVet').value;
-  document.getElementById('clinicName').textContent = APP.config.clinica;
-  alert('✓ Configuración guardada');
-}
-
-// ─── ELIMINAR ───
-function eliminarTurno(id) {
-  if (!confirm('¿Eliminar este turno?')) return;
-  APP.turno = APP.turno.filter(t=>t.id!==id);
-  goTo(APP.seccion);
-}
-function eliminarCliente(id) {
-  if (!confirm('¿Eliminar este cliente?')) return;
-  APP.clientes = APP.clientes.filter(c=>c.id!==id);
-  goTo(APP.seccion);
-}
-function eliminarMovimiento(id) {
-  if (!confirm('¿Eliminar este movimiento?')) return;
-  APP.caja = APP.caja.filter(m=>m.id!==id);
-  goTo(APP.seccion);
-}
-function eliminarProducto(id) {
-  if (!confirm('¿Eliminar este producto?')) return;
-  APP.inventario = APP.inventario.filter(i=>i.id!==id);
-  goTo(APP.seccion);
-}
-
-// ─── ESTADO TURNO ───
-function cambiarEstado(id) {
-  const estados = ['Confirmado','En espera','En consulta','Completado','Cancelado'];
-  const t = APP.turno.find(t=>t.id===id);
-  if (!t) return;
-  const idx = estados.indexOf(t.estado);
-  t.estado = estados[(idx+1) % estados.length];
-  goTo(APP.seccion);
-}
-
-// ─── WHATSAPP ───
-function whatsapp(tel, mascota) {
-  const num = tel.replace(/\D/g,'');
-  const msg = mascota ? `Hola! Le contactamos de la clínica por el turno de ${mascota}.` : 'Hola! Le contactamos de la clínica veterinaria.';
-  window.open(`https://wa.me/595${num}?text=${encodeURIComponent(msg)}`, '_blank');
-}
-function whatsappVacuna(tel, mascota, vacuna, fecha) {
-  const num = tel.replace(/\D/g,'');
-  const msg = `Hola! Le recordamos que ${mascota} tiene pendiente la vacuna *${vacuna}*. La próxima dosis vence el ${fecha}. Comuníquese para coordinar el turno. 🐾`;
-  window.open(`https://wa.me/595${num}?text=${encodeURIComponent(msg)}`, '_blank');
-}
+function dT(id){if(!confirm('¿Eliminar turno?'))return;D.T=D.T.filter(t=>t.id!==id);g(D.s);}
+function dC(id){if(!confirm('¿Eliminar cliente?'))return;D.C=D.C.filter(c=>c.id!==id);g(D.s);}
+function dK(id){if(!confirm('¿Eliminar?'))return;D.K=D.K.filter(m=>m.id!==id);g(D.s);}
+function dI(id){if(!confirm('¿Eliminar?'))return;D.I=D.I.filter(i=>i.id!==id);g(D.s);}
+function chEst(id){const E=['Confirmado','En espera','En consulta','Completado','Cancelado'];const t=D.T.find(t=>t.id===id);if(!t)return;t.e=E[(E.indexOf(t.e)+1)%E.length];g(D.s);}
+function wa(tel,masc){const n=tel.replace(/\D/g,'');const msg=masc?`Hola! Le contactamos de la clínica por el turno de *${masc}*.`:'Hola! Le contactamos de la clínica.';window.open(`https://wa.me/595${n}?text=${encodeURIComponent(msg)}`,'_blank');}
+function waV(tel,masc,vac,prox){const n=tel.replace(/\D/g,'');window.open(`https://wa.me/595${n}?text=${encodeURIComponent(`Hola! Recordatorio: *${masc}* tiene pendiente la vacuna *${vac}*. Próxima dosis: ${prox}. 🐾`)}`,'_blank');}
 </script>
 </body>
 </html>
