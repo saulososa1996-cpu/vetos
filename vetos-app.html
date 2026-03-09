@@ -412,15 +412,22 @@ async function doLogin() {
 
   // Buscar licencia por email/usuario
   try {
-    const rows = await sb('licencias','GET',null,`?email=eq.${encodeURIComponent(u)}&select=*`);
-    // Demo fallback: si no encuentra por email, usar la primera licencia (modo demo)
-    const lic = (rows && rows.length>0) ? rows[0] : (await sb('licencias','GET',null,'?order=created_at&limit=1'))[0];
+    const rows = await sb('licencias','GET',null,`?email=eq.${encodeURIComponent(u.toLowerCase())}&select=*`);
+    const lic = (rows && rows.length>0) ? rows[0] : null;
     LIC = lic;
 
-    if(!lic || !lic.activo) {
+    // Si no existe el email → mostrar error
+    if(!lic) {
+      btn.textContent='Ingresar al sistema →';btn.disabled=false;
+      document.getElementById('lnErr').textContent='Usuario no encontrado. Verificá tu email o contactá soporte.';
+      document.getElementById('lnErr').style.display='block';
+      return;
+    }
+
+    if(!lic.activo) {
       btn.textContent='Ingresar al sistema →';btn.disabled=false;
       document.getElementById('loginScreen').style.display='none';
-      mostrarBloqueo(lic?.clinica || 'Tu clínica');
+      mostrarBloqueo(lic.clinica);
       return;
     }
 
